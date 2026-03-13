@@ -28,7 +28,7 @@ openclaw config set plugins.entries.tweetclaw.config.pollingInterval 60
 
 ## Tools
 
-TweetClaw uses the [Cloudflare Code Mode pattern](https://github.com/cloudflare/mcp)  - just 2 tools that cover the entire API:
+TweetClaw uses Xquik's 2-tool approach to cover the entire API:
 
 ### `explore` (free, no network)
 

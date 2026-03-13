@@ -84,7 +84,7 @@ export default function register(api: OpenClawApi, fetchFunction?: FetchFunction
   const { apiKey, baseUrl = 'https://xquik.com' } = config;
   const request = createProxiedRequest(baseUrl, apiKey, fetchFunction);
 
-  // --- Tools (Cloudflare Code Mode pattern) ---
+  // --- Tools (2-tool approach) ---
   api.registerTool(
     {
       description: SEARCH_DESCRIPTION,

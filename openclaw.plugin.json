@@ -2,7 +2,7 @@
   "id": "tweetclaw",
   "name": "TweetClaw",
   "version": "1.0.0",
-  "description": "X/Twitter automation powered by Xquik - search tweets, post, extract data, run giveaways, monitor accounts, compose with AI",
+  "description": "Post tweets, reply, like, retweet, follow, DM from your chat - full X/Twitter automation powered by Xquik",
   "author": "Xquik",
   "license": "MIT",
   "configSchema": {

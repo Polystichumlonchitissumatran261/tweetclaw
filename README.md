@@ -1,6 +1,6 @@
 # TweetClaw
 
-X/Twitter automation for [OpenClaw](https://github.com/nicepkg/openclaw). Search tweets, post, extract data, run giveaways, monitor accounts  - all from your chat.
+Post tweets, reply, like, retweet, follow, DM & more - directly from your chat. Full X/Twitter automation for [OpenClaw](https://github.com/nicepkg/openclaw).
 
 Powered by [Xquik](https://xquik.com), the all-in-one X automation platform.
 
@@ -89,13 +89,13 @@ You: "Monitor @elonmusk for new tweets and follower changes"
 
 | Category | Examples |
 |----------|---------|
-| **Composition** | Compose, refine, score tweets; manage drafts; analyze writing styles |
+| **Write Actions** | Post tweets, reply, like, retweet, follow, unfollow, DM, update profile & avatar |
+| **Media** | Upload media via URL, download tweet media, get gallery links |
 | **Twitter** | Search tweets, look up users, check follow relationships |
+| **Composition** | Compose, refine, score tweets; manage drafts; analyze writing styles |
 | **Extraction** | Run extraction jobs (reply-extractor, community-explorer, etc.) |
 | **Draws** | Run giveaway draws on tweets, export results |
 | **Monitoring** | Create monitors, view events, manage webhooks |
-| **Media** | Download tweet media, upload media via URL |
-| **Write Actions** | Post tweets, like, retweet, follow, DM, update profile |
 | **Account** | Manage API keys, subscription, connected X accounts |
 | **Trends** | X trending topics, curated radar from multiple sources |
 
@@ -108,10 +108,10 @@ You: "Monitor @elonmusk for new tweets and follower changes"
 - Integrations management
 
 **Subscription ($20/month)** for full access:
+- Write actions (post, reply, like, retweet, follow, DM, update profile)
 - Tweet search, user lookup, media download
 - Extractions, giveaway draws
 - Account monitors, events, webhooks
-- Write actions (post, like, retweet, follow, DM)
 - X trending topics
 
 When a paid endpoint returns 402, TweetClaw automatically provides a checkout URL.

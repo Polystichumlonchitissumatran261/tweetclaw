@@ -2,7 +2,7 @@ import { createProxiedRequest } from '../request.js';
 import { AsyncFunction, errorResult, specEndpoints, successResult } from './sandbox.js';
 import type { FetchFunction, RequestFunction, ToolResult } from '../types.js';
 
-const EXECUTE_DESCRIPTION = `Execute X (Twitter) API calls: search tweets, look up users, download media, compose tweets, run giveaways, monitor accounts, and more. Write an async arrow function.
+const EXECUTE_DESCRIPTION = `Execute X (Twitter) API calls: post tweets, reply, like, retweet, follow, DM, update profile, upload media, search tweets, look up users, extract data, run giveaways, monitor accounts, compose tweets, and more. Write an async arrow function.
 
 The sandbox provides:
 \`\`\`typescript
@@ -19,6 +19,13 @@ declare const spec: { endpoints: EndpointInfo[] };
 
 Auth is injected automatically - never pass API keys.
 First use "explore" to find endpoints, then write code here to call them.
+
+## Important rules
+- TWEET ACTIONS: SENDING a tweet ("tweet this", "post this") uses POST /api/v1/x/tweets. DRAFTING a tweet ("help me write", "compose") uses the 3-step compose flow. Never use compose when the user has text and wants to send it.
+- CALL ORDERING: NEVER combine free and paid endpoints in Promise.all. Call free endpoints first (radar, styles, compose), then paid ones separately. If a paid call fails with 402, still use free data already fetched.
+- WRITE ACTIONS: All require the "account" parameter (X username, e.g. "@myaccount"). Follow/unfollow/DM use numeric user ID in path - look up the user first via GET /api/v1/x/users/:username.
+- CURRENT EVENTS: Use /api/v1/radar (free) for trending topics. Never use web search for trends.
+- SUBSCRIPTION ERRORS: On 402, call POST /api/v1/subscribe (free) to get checkout URL.
 
 ## Workflows
 
@@ -103,7 +110,28 @@ async () => {
 }
 \`\`\`
 
-### 7. Search tweets with pagination (Subscription required)
+### 7. Update profile, avatar, or banner
+\`\`\`javascript
+async () => {
+  // Update bio, name, location, URL
+  await xquik.request('/api/v1/x/profile', {
+    method: 'PATCH',
+    body: { account: '@myaccount', name: 'New Name', bio: 'Building cool stuff' }
+  });
+  // Update avatar (url must be HTTPS, max 700 KB)
+  await xquik.request('/api/v1/x/profile/avatar', {
+    method: 'PATCH',
+    body: { account: '@myaccount', url: 'https://example.com/avatar.jpg' }
+  });
+  // Update banner (max 2 MB)
+  return xquik.request('/api/v1/x/profile/banner', {
+    method: 'PATCH',
+    body: { account: '@myaccount', url: 'https://example.com/banner.jpg' }
+  });
+}
+\`\`\`
+
+### 8. Search tweets with pagination (Subscription required)
 \`\`\`javascript
 async () => {
   // Use limit param for more than 20 results (max 200)
@@ -113,14 +141,87 @@ async () => {
 }
 \`\`\`
 
-### 8. Browse trending topics (FREE)
+### 9. Look up a user or tweet
+\`\`\`javascript
+async () => {
+  // User profile (name, bio, followers, following, verified, location)
+  const user = await xquik.request('/api/v1/x/users/elonmusk');
+  // Single tweet with full metrics
+  const tweet = await xquik.request('/api/v1/x/tweets/1234567890');
+  // Check if A follows B
+  const follows = await xquik.request('/api/v1/x/followers/check', {
+    query: { source: 'userA', target: 'userB' }
+  });
+  return { user, tweet, follows };
+}
+\`\`\`
+
+### 10. Monitor an account + set up webhook
+\`\`\`javascript
+async () => {
+  // Create monitor for new tweets, replies, follower changes
+  const monitor = await xquik.request('/api/v1/monitors', {
+    method: 'POST',
+    body: { username: 'elonmusk', eventTypes: ['tweet.new', 'tweet.reply', 'follower.gained'] }
+  });
+  // Set up webhook to receive events (save the secret!)
+  const webhook = await xquik.request('/api/v1/webhooks', {
+    method: 'POST',
+    body: { url: 'https://your-server.com/webhook', eventTypes: ['tweet.new', 'tweet.reply'] }
+  });
+  return { monitor, webhook };
+}
+\`\`\`
+
+### 11. Run a giveaway draw from tweet replies
+\`\`\`javascript
+async () => {
+  return xquik.request('/api/v1/draws', {
+    method: 'POST',
+    body: {
+      tweetUrl: 'https://x.com/user/status/1234567890',
+      winnerCount: 3,
+      backupCount: 2,
+      uniqueAuthorsOnly: true,
+      mustRetweet: true,
+      mustFollowUsername: 'myaccount',
+      filterMinFollowers: 50
+    }
+  });
+}
+\`\`\`
+
+### 12. Extract bulk data (followers, replies, communities)
+\`\`\`javascript
+async () => {
+  // Always estimate cost first
+  const estimate = await xquik.request('/api/v1/extractions/estimate', {
+    method: 'POST',
+    body: { toolType: 'follower_explorer', targetUsername: 'elonmusk', resultsLimit: 1000 }
+  });
+  if (!estimate.allowed) return { error: 'Would exceed quota', estimate };
+  // Create extraction job
+  const job = await xquik.request('/api/v1/extractions', {
+    method: 'POST',
+    body: { toolType: 'follower_explorer', targetUsername: 'elonmusk', resultsLimit: 1000 }
+  });
+  return job;
+  // 20 tool types: reply_extractor, repost_extractor, quote_extractor, thread_extractor,
+  // article_extractor, follower_explorer, following_explorer, verified_follower_explorer,
+  // mention_extractor, post_extractor, community_extractor, community_moderator_explorer,
+  // community_post_extractor, community_search, list_member_extractor, list_post_extractor,
+  // list_follower_explorer, space_explorer, people_search, tweet_search_extractor
+}
+\`\`\`
+
+### 13. Browse trending topics (FREE)
 \`\`\`javascript
 async () => {
   return xquik.request('/api/v1/radar');
 }
 \`\`\`
 
-### 9. Analyze a user's writing style
+### 14. Analyze a user's writing style
 \`\`\`javascript
 async () => {
   // Returns cached style if available (free for all users)
@@ -132,7 +233,7 @@ async () => {
 }
 \`\`\`
 
-### 10. Download media and get gallery link (Subscription required)
+### 15. Download media and get gallery link (Subscription required)
 \`\`\`javascript
 async () => {
   // Returns galleryUrl only (shareable gallery page with all media)
@@ -143,14 +244,42 @@ async () => {
 }
 \`\`\`
 
-### 11. Subscribe (FREE - returns Stripe checkout URL)
+### 16. Set up Telegram alerts for monitor events (FREE)
+\`\`\`javascript
+async () => {
+  return xquik.request('/api/v1/integrations', {
+    method: 'POST',
+    body: {
+      type: 'telegram',
+      chatId: '123456789',
+      eventTypes: ['tweet.new', 'tweet.reply', 'draw.completed', 'extraction.completed']
+    }
+  });
+}
+\`\`\`
+
+### 17. Community actions (create, join, leave)
+\`\`\`javascript
+async () => {
+  // Join a community
+  await xquik.request('/api/v1/x/communities/99999/join', {
+    method: 'POST', body: { account: '@myaccount' }
+  });
+  // Leave a community
+  await xquik.request('/api/v1/x/communities/99999/join', {
+    method: 'DELETE', body: { account: '@myaccount' }
+  });
+}
+\`\`\`
+
+### 18. Subscribe (FREE - returns Stripe checkout URL)
 \`\`\`javascript
 async () => {
   return xquik.request('/api/v1/subscribe', { method: 'POST' });
 }
 \`\`\`
 
-### 12. Draft & optimize tweet text (3-step compose flow, FREE)
+### 19. Draft & optimize tweet text (3-step compose flow, FREE)
 \`\`\`javascript
 async () => {
   // Use this ONLY when the user wants help WRITING tweet text.

@@ -4,7 +4,7 @@ import type { EndpointInfo, ToolResult } from '../types.js';
 
 const categories = [...new Set(API_SPEC.map((endpoint) => endpoint.category))].toSorted((a, b) => a.localeCompare(b)).join(', ');
 
-const SEARCH_DESCRIPTION = `Search the X (Twitter) API spec for endpoints: tweet search, user lookup, media download, monitoring, giveaways, composition, and more. No network calls - runs against an in-memory endpoint catalog.
+const SEARCH_DESCRIPTION = `Search the X (Twitter) API spec for endpoints: post tweets, reply, like, retweet, follow, DM, update profile, upload media, search tweets, look up users, extract data, monitor accounts, run giveaways, compose tweets, and more. No network calls - runs against an in-memory endpoint catalog.
 
 Write an async arrow function. The sandbox provides:
 

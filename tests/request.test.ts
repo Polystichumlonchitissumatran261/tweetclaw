@@ -33,7 +33,7 @@ describe('buildFetchHeaders', () => {
 describe('buildFetchUrl', () => {
   it('builds URL with base and path', () => {
     expect.assertions(1);
-    expect(buildFetchUrl('https://xquik.com', '/api/v1/account', undefined))
+    expect(buildFetchUrl('https://xquik.com', '/api/v1/account'))
       .toBe('https://xquik.com/api/v1/account');
   });
 

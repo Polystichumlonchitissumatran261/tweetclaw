@@ -14,13 +14,17 @@ interface RadarResponse {
   readonly total: number;
 }
 
+function isRadarResponse(value: unknown): value is RadarResponse {
+  return typeof value === 'object' && value !== null && 'items' in value && 'total' in value;
+}
+
 function formatTrends(radar: RadarResponse): string {
   const lines: string[] = [];
   lines.push(`--- Trending Topics (${String(radar.total)} items) ---`);
 
   for (const [index, item] of radar.items.entries()) {
-    const num = String(index + 1);
-    let line = `${num}. ${item.title}`;
+    const position = String(index + 1);
+    let line = `${position}. ${item.title}`;
     if (item.source !== undefined) {
       line += ` [${item.source}]`;
     }
@@ -36,17 +40,20 @@ function formatTrends(radar: RadarResponse): string {
   return lines.join('\n');
 }
 
-async function handleXTrends(request: RequestFunction, args?: string): Promise<string> {
+async function handleXTrends(request: RequestFunction, categoryFilter?: string): Promise<string> {
   const query: Record<string, string> = {};
-  if (args !== undefined && args.length > 0) {
-    const trimmed = args.trim();
+  if (categoryFilter !== undefined && categoryFilter.length > 0) {
+    const trimmed = categoryFilter.trim();
     if (trimmed.length > 0) {
-      query['category'] = trimmed;
+      query.category = trimmed;
     }
   }
   const hasQuery = Object.keys(query).length > 0;
   const result: unknown = await request('/api/v1/radar', hasQuery ? { query } : undefined);
-  return formatTrends(result as RadarResponse);
+  if (!isRadarResponse(result)) {
+    return '--- Trending Topics (0 items) ---';
+  }
+  return formatTrends(result);
 }
 
 export { formatTrends, handleXTrends };

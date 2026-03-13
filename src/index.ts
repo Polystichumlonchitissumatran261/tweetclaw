@@ -4,7 +4,22 @@ import { createProxiedRequest } from './request.js';
 import { createEventPoller } from './services/event-poller.js';
 import { handleExplore, SEARCH_DESCRIPTION } from './tools/explore.js';
 import { EXECUTE_DESCRIPTION, handleTweetclaw } from './tools/tweetclaw.js';
-import type { PluginConfig } from './types.js';
+import type { FetchFunction, PluginConfig } from './types.js';
+
+interface PollerEvent {
+  readonly eventType?: string;
+  readonly xUsername?: string;
+}
+
+function isPollerEvent(value: unknown): value is PollerEvent {
+  return typeof value === 'object' && value !== null;
+}
+
+const DEFAULT_POLLING_INTERVAL_SECONDS = 60;
+
+interface CommandContext {
+  readonly args?: string;
+}
 
 interface OpenClawApi {
   readonly config: {
@@ -21,9 +36,9 @@ interface OpenClawApi {
     readonly warn: (message: string) => void;
   };
   readonly registerCommand: (options: {
-    readonly acceptsArgs?: boolean;
+    readonly acceptsArguments?: boolean;
     readonly description: string;
-    readonly handler: (ctx: { readonly args?: string }) => Promise<{ readonly text: string }>;
+    readonly handler: (context: CommandContext) => Promise<{ readonly text: string }>;
     readonly name: string;
   }) => void;
   readonly registerService: (options: {
@@ -36,7 +51,7 @@ interface OpenClawApi {
       readonly description: string;
       readonly name: string;
       readonly parameters: {
-        readonly properties: Record<string, { readonly description: string; readonly type: string }>;
+        readonly properties: Readonly<Record<string, { readonly description: string; readonly type: string }>>;
         readonly required: readonly string[];
         readonly type: string;
       };
@@ -57,7 +72,7 @@ const CODE_PARAMETER = {
   type: 'object',
 };
 
-export default function register(api: OpenClawApi): void {
+export default function register(api: OpenClawApi, fetchFunction?: FetchFunction): void {
   const config = api.config.plugins?.entries?.tweetclaw?.config;
   if (config?.apiKey === undefined) {
     api.logger.warn(
@@ -67,7 +82,7 @@ export default function register(api: OpenClawApi): void {
   }
 
   const { apiKey, baseUrl = 'https://xquik.com' } = config;
-  const request = createProxiedRequest(baseUrl, apiKey);
+  const request = createProxiedRequest(baseUrl, apiKey, fetchFunction);
 
   // --- Tools (Cloudflare Code Mode pattern) ---
   api.registerTool(
@@ -85,7 +100,7 @@ export default function register(api: OpenClawApi): void {
       name: 'tweetclaw',
       parameters: CODE_PARAMETER,
     },
-    async ({ code }) => handleTweetclaw(code, baseUrl, apiKey),
+    async ({ code }) => handleTweetclaw({ apiKey, baseUrl, code, fetchFunction }),
   );
 
   // --- Commands (instant, no LLM) ---
@@ -99,23 +114,28 @@ export default function register(api: OpenClawApi): void {
   });
 
   api.registerCommand({
-    acceptsArgs: true,
+    acceptsArguments: true,
     description: 'Show trending topics on X',
-    handler: async (ctx) => {
-      const text = await handleXTrends(request, ctx.args);
+    handler: async ({ args }) => {
+      const text = await handleXTrends(request, args);
       return { text };
     },
     name: 'xtrends',
   });
 
   // --- Background event poller ---
-  if (config.pollingEnabled !== false) {
+  const { pollingEnabled, pollingInterval } = config;
+  if (pollingEnabled !== false) {
     const poller = createEventPoller({
-      intervalSeconds: config.pollingInterval ?? 60,
+      intervalSeconds: pollingInterval ?? DEFAULT_POLLING_INTERVAL_SECONDS,
       onEvents: (events) => {
         for (const event of events) {
-          const eventType = typeof event['eventType'] === 'string' ? event['eventType'] : 'unknown';
-          const username = typeof event['xUsername'] === 'string' ? event['xUsername'] : '';
+          const eventType: string = isPollerEvent(event) && typeof event.eventType === 'string'
+            ? event.eventType
+            : 'unknown';
+          const username: string = isPollerEvent(event) && typeof event.xUsername === 'string'
+            ? event.xUsername
+            : '';
           api.sendMessage(`[TweetClaw] ${eventType} from @${username}`);
         }
       },

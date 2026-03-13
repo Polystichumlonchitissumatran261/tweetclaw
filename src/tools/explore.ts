@@ -1,5 +1,5 @@
 import { API_SPEC } from '../api-spec.js';
-import { truncateResponse } from '../truncate.js';
+import { AsyncFunction, errorResult, specEndpoints, successResult } from './sandbox.js';
 import type { EndpointInfo, ToolResult } from '../types.js';
 
 const categories = [...new Set(API_SPEC.map((endpoint) => endpoint.category))].toSorted((a, b) => a.localeCompare(b)).join(', ');
@@ -45,27 +45,13 @@ async () => {
 }
 \`\`\``;
 
-const specEndpoints: ReadonlyArray<Readonly<Record<string, unknown>>> = API_SPEC.map(
-  (endpoint): Readonly<Record<string, unknown>> => ({ ...endpoint }),
-);
-
-function extractErrorMessage(error: unknown): string {
-  if (error instanceof Error) {
-    return `${error.constructor.name}: ${error.message}`;
-  }
-  return String(error);
-}
-
 async function handleExplore(code: string): Promise<ToolResult> {
   try {
-    const AsyncFunction = Object.getPrototypeOf(async function () {}).constructor as new (
-      ...args: readonly string[]
-    ) => (...args: ReadonlyArray<unknown>) => Promise<unknown>;
-    const fn = new AsyncFunction('spec', `return (${code})()`);
-    const result: unknown = await fn({ endpoints: specEndpoints });
-    return { content: [{ text: truncateResponse(result), type: 'text' as const }] };
+    const executor = new AsyncFunction('spec', `return (${code})()`);
+    const result: unknown = await executor({ endpoints: specEndpoints });
+    return successResult(result);
   } catch (error: unknown) {
-    return { content: [{ text: extractErrorMessage(error), type: 'text' as const }], isError: true };
+    return errorResult(error);
   }
 }
 

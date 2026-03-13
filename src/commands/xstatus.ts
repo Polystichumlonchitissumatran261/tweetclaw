@@ -14,6 +14,33 @@ interface AccountResponse {
   readonly xUsername?: string;
 }
 
+function isAccountResponse(value: unknown): value is AccountResponse {
+  return typeof value === 'object' && value !== null;
+}
+
+function formatSubscriptionLine(subscription: AccountResponse['subscription']): string {
+  if (subscription === undefined) {
+    return '';
+  }
+  const status = subscription.isActive === true ? 'Active' : 'Inactive';
+  const planSuffix = subscription.plan === undefined ? '' : ` (${subscription.plan})`;
+  return `Subscription: ${status}${planSuffix}`;
+}
+
+function formatUsageLines(usage: AccountResponse['usage']): readonly string[] {
+  if (usage === undefined) {
+    return [];
+  }
+  const lines: string[] = [];
+  if (usage.percent !== undefined) {
+    lines.push(`Usage: ${String(usage.percent)}%`);
+  }
+  if (usage.remaining !== undefined) {
+    lines.push(`Remaining: ${String(usage.remaining)}`);
+  }
+  return lines;
+}
+
 function formatAccountStatus(account: AccountResponse): string {
   const lines: string[] = [];
   lines.push('--- Xquik Account Status ---');
@@ -28,28 +55,22 @@ function formatAccountStatus(account: AccountResponse): string {
     lines.push(`Locale: ${account.locale}`);
   }
 
-  const sub = account.subscription;
-  if (sub !== undefined) {
-    const status = sub.isActive === true ? 'Active' : 'Inactive';
-    lines.push(`Subscription: ${status}${sub.plan !== undefined ? ` (${sub.plan})` : ''}`);
+  const subscriptionLine = formatSubscriptionLine(account.subscription);
+  if (subscriptionLine.length > 0) {
+    lines.push(subscriptionLine);
   }
 
-  const usage = account.usage;
-  if (usage !== undefined) {
-    if (usage.percent !== undefined) {
-      lines.push(`Usage: ${String(usage.percent)}%`);
-    }
-    if (usage.remaining !== undefined) {
-      lines.push(`Remaining: ${String(usage.remaining)}`);
-    }
-  }
+  lines.push(...formatUsageLines(account.usage));
 
   return lines.join('\n');
 }
 
 async function handleXStatus(request: RequestFunction): Promise<string> {
   const result: unknown = await request('/api/v1/account');
-  return formatAccountStatus(result as AccountResponse);
+  if (!isAccountResponse(result)) {
+    return '--- Xquik Account Status ---';
+  }
+  return formatAccountStatus(result);
 }
 
 export { formatAccountStatus, handleXStatus };

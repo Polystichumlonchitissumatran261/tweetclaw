@@ -23,7 +23,7 @@ function buildFetchHeaders(credential: string, hasBody: boolean): Record<string,
   return auth;
 }
 
-function buildFetchUrl(baseUrl: string, path: string, query: Readonly<Record<string, string>> | undefined): string {
+function buildFetchUrl(baseUrl: string, path: string, query?: Readonly<Record<string, string>>): string {
   const url = new URL(path, baseUrl);
   if (query !== undefined) {
     for (const [key, value] of Object.entries(query)) {

@@ -4,7 +4,7 @@ import { API_SPEC } from '../src/api-spec.js';
 describe('API_SPEC', () => {
   it('has no duplicate method+path combinations', () => {
     expect.assertions(1);
-    const keys = API_SPEC.map((e) => `${e.method} ${e.path}`);
+    const keys = API_SPEC.map((endpoint) => `${endpoint.method} ${endpoint.path}`);
     const uniqueKeys = new Set(keys);
     expect(uniqueKeys.size).toBe(keys.length);
   });
@@ -12,25 +12,25 @@ describe('API_SPEC', () => {
   it('all entries have required fields', () => {
     expect.assertions(1);
     const invalid = API_SPEC.filter(
-      (e) =>
-        typeof e.category !== 'string' ||
-        typeof e.free !== 'boolean' ||
-        typeof e.method !== 'string' ||
-        typeof e.path !== 'string' ||
-        typeof e.summary !== 'string',
+      (endpoint) =>
+        typeof endpoint.category !== 'string' ||
+        typeof endpoint.free !== 'boolean' ||
+        typeof endpoint.method !== 'string' ||
+        typeof endpoint.path !== 'string' ||
+        typeof endpoint.summary !== 'string',
     );
     expect(invalid).toStrictEqual([]);
   });
 
   it('all paths start with /api/v1/', () => {
     expect.assertions(1);
-    const invalid = API_SPEC.filter((e) => !e.path.startsWith('/api/v1/'));
+    const invalid = API_SPEC.filter((endpoint) => !endpoint.path.startsWith('/api/v1/'));
     expect(invalid).toStrictEqual([]);
   });
 
   it('categories are valid strings', () => {
     expect.assertions(1);
-    const categories = [...new Set(API_SPEC.map((e) => e.category))];
+    const categories = [...new Set(API_SPEC.map((endpoint) => endpoint.category))];
     const allValid = categories.every((c) => typeof c === 'string' && c.length > 0);
     expect(allValid).toBe(true);
   });
@@ -42,21 +42,20 @@ describe('API_SPEC', () => {
 
   it('has both free and paid endpoints', () => {
     expect.assertions(2);
-    expect(API_SPEC.some((e) => e.free)).toBe(true);
-    expect(API_SPEC.some((e) => !e.free)).toBe(true);
+    expect(API_SPEC.some((endpoint) => endpoint.free)).toBe(true);
+    expect(API_SPEC.some((endpoint) => !endpoint.free)).toBe(true);
   });
 
   it('parameters have required fields when present', () => {
     expect.assertions(1);
-    const invalid = API_SPEC.flatMap((e) =>
-      (e.parameters ?? []).filter(
-        (p) =>
-          typeof p.name !== 'string' ||
-          typeof p.description !== 'string' ||
-          typeof p.required !== 'boolean' ||
-          typeof p.type !== 'string' ||
-          !['body', 'path', 'query'].includes(p.in),
-      ),
+    const allParameters = API_SPEC.flatMap((endpoint) => endpoint.parameters ?? []);
+    const invalid = allParameters.filter(
+      (p) =>
+        typeof p.name !== 'string' ||
+        typeof p.description !== 'string' ||
+        typeof p.required !== 'boolean' ||
+        typeof p.type !== 'string' ||
+        !['body', 'path', 'query'].includes(p.in),
     );
     expect(invalid).toStrictEqual([]);
   });

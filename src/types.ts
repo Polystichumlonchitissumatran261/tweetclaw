@@ -40,7 +40,7 @@ interface PluginConfig {
 
 interface EventPollerOptions {
   readonly intervalSeconds: number;
-  readonly onEvents: (events: ReadonlyArray<Record<string, unknown>>) => void;
+  readonly onEvents: (events: ReadonlyArray<Readonly<Record<string, unknown>>>) => void;
   readonly request: RequestFunction;
 }
 

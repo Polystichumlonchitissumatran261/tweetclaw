@@ -1,6 +1,5 @@
-import { API_SPEC } from '../api-spec.js';
 import { createProxiedRequest } from '../request.js';
-import { truncateResponse } from '../truncate.js';
+import { AsyncFunction, errorResult, specEndpoints, successResult } from './sandbox.js';
 import type { FetchFunction, RequestFunction, ToolResult } from '../types.js';
 
 const EXECUTE_DESCRIPTION = `Execute X (Twitter) API calls: search tweets, look up users, download media, compose tweets, run giveaways, monitor accounts, and more. Write an async arrow function.
@@ -179,45 +178,35 @@ async () => {
 - If a paid call fails, still use free data already fetched (radar, styles, compose). Never discard free data or fall back to web search
 - API errors include status code and message`;
 
-const specEndpoints: ReadonlyArray<Readonly<Record<string, unknown>>> = API_SPEC.map(
-  (endpoint): Readonly<Record<string, unknown>> => ({ ...endpoint }),
-);
-
 const EXECUTION_TIMEOUT_MS = 30_000;
 const MS_PER_SECOND = 1000;
 
-function extractErrorMessage(error: unknown): string {
-  if (error instanceof Error) {
-    return `${error.constructor.name}: ${error.message}`;
-  }
-  return String(error);
+interface TweetclawOptions {
+  readonly apiKey: string;
+  readonly baseUrl: string;
+  readonly code: string;
+  readonly fetchFunction?: FetchFunction | undefined;
+  readonly timeoutMs?: number | undefined;
 }
 
-async function handleTweetclaw(
-  code: string,
-  baseUrl: string,
-  apiKey: string,
-  fetchFunction?: FetchFunction,
-): Promise<ToolResult> {
+async function handleTweetclaw(options: Readonly<TweetclawOptions>): Promise<ToolResult> {
+  const { apiKey, baseUrl, code, fetchFunction, timeoutMs = EXECUTION_TIMEOUT_MS } = options;
   try {
     const request: RequestFunction = createProxiedRequest(baseUrl, apiKey, fetchFunction);
-    const AsyncFunction = Object.getPrototypeOf(async function () {}).constructor as new (
-      ...args: readonly string[]
-    ) => (...args: ReadonlyArray<unknown>) => Promise<unknown>;
-    const fn = new AsyncFunction('xquik', 'spec', `return (${code})()`);
+    const executor = new AsyncFunction('xquik', 'spec', `return (${code})()`);
 
     const result: unknown = await Promise.race([
-      fn({ request }, { endpoints: specEndpoints }),
+      executor({ request }, { endpoints: specEndpoints }),
       new Promise<never>((_resolve, reject) => {
         setTimeout(() => {
-          reject(new Error(`Execution timed out after ${String(EXECUTION_TIMEOUT_MS / MS_PER_SECOND)}s`));
-        }, EXECUTION_TIMEOUT_MS);
+          reject(new Error(`Execution timed out after ${String(timeoutMs / MS_PER_SECOND)}s`));
+        }, timeoutMs);
       }),
     ]);
 
-    return { content: [{ text: truncateResponse(result), type: 'text' as const }] };
+    return successResult(result);
   } catch (error: unknown) {
-    return { content: [{ text: extractErrorMessage(error), type: 'text' as const }], isError: true };
+    return errorResult(error);
   }
 }
 

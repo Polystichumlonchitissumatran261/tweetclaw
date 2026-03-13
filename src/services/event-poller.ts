@@ -10,14 +10,23 @@ interface EventsResponse {
   readonly nextCursor?: string;
 }
 
+function isEventsResponse(value: unknown): value is EventsResponse {
+  return typeof value === 'object' && value !== null && 'events' in value;
+}
+
 interface EventPollerHandle {
   readonly start: () => void;
   readonly stop: () => void;
 }
 
+function extractCursor(events: ReadonlyArray<Readonly<Record<string, unknown>>>): string | undefined {
+  const lastEvent = events.at(-1);
+  return typeof lastEvent?.id === 'string' ? lastEvent.id : undefined;
+}
+
 function createEventPoller(options: EventPollerOptions): EventPollerHandle {
-  let timer: ReturnType<typeof setTimeout> | undefined;
-  let cursor: string | undefined;
+  let timer: ReturnType<typeof setTimeout> | undefined = undefined;
+  let cursor: string | undefined = undefined;
   let consecutiveErrors = 0;
   let stopped = false;
 
@@ -25,22 +34,23 @@ function createEventPoller(options: EventPollerOptions): EventPollerHandle {
     try {
       const query: Record<string, string> = {};
       if (cursor !== undefined) {
-        query['after'] = cursor;
+        query.after = cursor;
       }
       const hasQuery = Object.keys(query).length > 0;
-      const result = (await options.request(
+      const result: unknown = await options.request(
         '/api/v1/events',
         hasQuery ? { query } : undefined,
-      )) as EventsResponse;
+      );
+
+      if (!isEventsResponse(result)) {
+        return;
+      }
 
       if (result.events.length > 0) {
         options.onEvents(result.events);
-        const lastEvent = result.events[result.events.length - 1];
-        if (lastEvent !== undefined) {
-          const eventId = lastEvent['id'];
-          if (typeof eventId === 'string') {
-            cursor = eventId;
-          }
+        const newCursor = extractCursor(result.events);
+        if (newCursor !== undefined) {
+          cursor = newCursor;
         }
       }
 
@@ -62,13 +72,11 @@ function createEventPoller(options: EventPollerOptions): EventPollerHandle {
   }
 
   async function loop(): Promise<void> {
+    await poll();
     if (stopped) {
       return;
     }
-    await poll();
-    if (!stopped) {
-      timer = setTimeout(() => { void loop(); }, getNextInterval());
-    }
+    timer = setTimeout(() => { void loop(); }, getNextInterval());
   }
 
   return {
@@ -87,4 +95,3 @@ function createEventPoller(options: EventPollerOptions): EventPollerHandle {
 }
 
 export { createEventPoller };
-export type { EventPollerHandle, EventsResponse };

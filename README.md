@@ -1,6 +1,6 @@
 # TweetClaw
 
-X/Twitter automation for [OpenClaw](https://github.com/nicepkg/openclaw). Search tweets, post, extract data, run giveaways, monitor accounts — all from your chat.
+X/Twitter automation for [OpenClaw](https://github.com/nicepkg/openclaw). Search tweets, post, extract data, run giveaways, monitor accounts  - all from your chat.
 
 Powered by [Xquik](https://xquik.com), the all-in-one X automation platform.
 
@@ -28,7 +28,7 @@ openclaw config set plugins.entries.tweetclaw.config.pollingInterval 60
 
 ## Tools
 
-TweetClaw uses the [Cloudflare Code Mode pattern](https://github.com/cloudflare/mcp) — just 2 tools that cover the entire API:
+TweetClaw uses the [Cloudflare Code Mode pattern](https://github.com/cloudflare/mcp)  - just 2 tools that cover the entire API:
 
 ### `explore` (free, no network)
 
@@ -43,7 +43,7 @@ AI uses explore → filters spec by category "composition"
 
 ### `tweetclaw` (execute API calls)
 
-Execute authenticated API calls. Auth is injected automatically — the LLM never sees your API key.
+Execute authenticated API calls. Auth is injected automatically  - the LLM never sees your API key.
 
 ```
 You: "Search tweets about AI agents"

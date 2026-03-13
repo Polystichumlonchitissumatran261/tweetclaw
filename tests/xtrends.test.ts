@@ -62,4 +62,11 @@ describe('handleXTrends', () => {
     };
     await handleXTrends(mockRequest);
   });
+
+  it('returns fallback when response is not a valid radar response', async () => {
+    expect.assertions(1);
+    const mockRequest: RequestFunction = async () => 'not an object';
+    const result = await handleXTrends(mockRequest);
+    expect(result).toBe('--- Trending Topics (0 items) ---');
+  });
 });

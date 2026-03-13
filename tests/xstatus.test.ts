@@ -52,4 +52,11 @@ describe('handleXStatus', () => {
     };
     await expect(handleXStatus(mockRequest)).rejects.toThrow('auth failed');
   });
+
+  it('returns fallback when response is not an object', async () => {
+    expect.assertions(1);
+    const mockRequest: RequestFunction = async () => 'not an object';
+    const result = await handleXStatus(mockRequest);
+    expect(result).toBe('--- Xquik Account Status ---');
+  });
 });

@@ -45,7 +45,8 @@ describe('truncateResponse', () => {
 
   it('handles undefined', () => {
     expect.assertions(1);
-    expect(truncateResponse(undefined)).toBe('undefined');
+    const value: unknown = undefined;
+    expect(truncateResponse(value)).toBe('undefined');
   });
 
   it('truncates large objects', () => {

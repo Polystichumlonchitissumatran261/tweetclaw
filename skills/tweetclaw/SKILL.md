@@ -50,12 +50,15 @@ async () => spec.endpoints.filter(e => e.category === 'composition')
 
 Execute authenticated API calls. Auth is injected automatically.
 
-Example: "Search tweets about AI agents"
+Example: "Post a tweet saying 'Hello from TweetClaw!'"
 
 ```javascript
 async () => {
-  const results = await xquik.request('/api/v1/x/tweets/search', { query: { q: 'AI agents' } });
-  return results;
+  const { accounts } = await xquik.request('/api/v1/x/accounts');
+  return xquik.request('/api/v1/x/tweets', {
+    method: 'POST',
+    body: { account: accounts[0].xUsername, text: 'Hello from TweetClaw!' }
+  });
 }
 ```
 
@@ -80,16 +83,49 @@ When polling is enabled (default), TweetClaw checks for new events every 60 seco
 
 ```
 You: "Post a tweet saying 'Hello from TweetClaw!'"
-Agent uses explore -> finds POST /api/v1/x/tweets
-Agent uses tweetclaw -> posts the tweet with auth
+Agent uses tweetclaw -> finds connected account, posts tweet
+```
+
+### Reply to a tweet
+
+```
+You: "Reply 'Great thread!' to this tweet: https://x.com/user/status/123"
+Agent uses tweetclaw -> posts reply with reply_to_tweet_id
+```
+
+### Like, retweet, follow
+
+```
+You: "Like and retweet this tweet, then follow the author"
+Agent uses tweetclaw -> likes tweet, retweets, looks up user ID, follows
+```
+
+### Send a DM
+
+```
+You: "DM @username saying 'Hey, let's collaborate!'"
+Agent uses tweetclaw -> looks up user ID, sends DM
+```
+
+### Update profile
+
+```
+You: "Change my bio to 'Building cool stuff' and update my avatar"
+Agent uses tweetclaw -> PATCH /api/v1/x/profile, PATCH /api/v1/x/profile/avatar
+```
+
+### Upload media and tweet with image
+
+```
+You: "Tweet 'Check this out!' with this image: https://example.com/photo.jpg"
+Agent uses tweetclaw -> uploads media, posts tweet with media_ids
 ```
 
 ### Search tweets
 
 ```
 You: "Search tweets about AI agents"
-Agent uses explore -> finds GET /api/v1/x/tweets/search
-Agent uses tweetclaw -> calls the endpoint
+Agent uses tweetclaw -> calls search endpoint with query
 ```
 
 ### Run a giveaway draw
@@ -99,6 +135,13 @@ You: "Pick 3 random winners from replies to this tweet: https://x.com/..."
 Agent uses tweetclaw -> creates draw with filters
 ```
 
+### Extract bulk data
+
+```
+You: "Extract the last 1000 followers of @elonmusk"
+Agent uses tweetclaw -> estimates cost, creates extraction job
+```
+
 ### Monitor an account
 
 ```
@@ -106,11 +149,32 @@ You: "Monitor @elonmusk for new tweets and follower changes"
 Agent uses tweetclaw -> creates monitor with event types
 ```
 
-### Compose an optimized tweet
+### Download tweet media
 
 ```
-You: "Compose a tweet about our product launch"
-Agent uses tweetclaw -> 3-step compose/refine/score workflow (free)
+You: "Download all media from this tweet"
+Agent uses tweetclaw -> returns gallery URL with all media
+```
+
+### Compose an optimized tweet (free)
+
+```
+You: "Help me write a tweet about our product launch"
+Agent uses tweetclaw -> 3-step compose/refine/score workflow
+```
+
+### Analyze writing style (free)
+
+```
+You: "Analyze @username's tweet style"
+Agent uses tweetclaw -> returns style analysis with tone, patterns, metrics
+```
+
+### Browse trending topics (free)
+
+```
+You: "What's trending on X right now?"
+Agent uses tweetclaw -> returns curated trending topics from 7 sources
 ```
 
 ## API Categories

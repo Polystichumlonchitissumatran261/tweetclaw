@@ -43,7 +43,14 @@ AI uses explore → filters spec by category "composition"
 
 ### `tweetclaw` (execute API calls)
 
-Execute authenticated API calls. Auth is injected automatically  - the LLM never sees your API key.
+Execute authenticated API calls. Auth is injected automatically - the LLM never sees your API key.
+
+```
+You: "Post a tweet saying 'Hello from TweetClaw!'"
+
+AI uses tweetclaw → finds connected account, posts tweet
+→ Returns { tweetId, success: true }
+```
 
 ```
 You: "Search tweets about AI agents"
@@ -51,13 +58,6 @@ You: "Search tweets about AI agents"
 AI uses explore → finds /api/v1/x/tweets/search
 AI uses tweetclaw → calls the endpoint with auth
 → Returns tweet results
-```
-
-```
-You: "Post a tweet saying 'Hello from TweetClaw!'"
-
-AI uses tweetclaw → finds connected account, posts tweet
-→ Returns { tweetId, success: true }
 ```
 
 ## Commands

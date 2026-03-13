@@ -2,6 +2,15 @@
 name: tweetclaw
 description: "OpenClaw plugin for X/Twitter automation. Post tweets, reply, like, retweet, follow, DM, search, extract data, run giveaways, monitor accounts via Xquik. 40+ endpoints, 2 tools (explore + tweetclaw), 2 commands (/xstatus, /xtrends), background event poller."
 homepage: https://xquik.com
+read_when:
+  - Posting, replying, liking, retweeting, or following on X/Twitter
+  - Searching tweets or looking up X/Twitter users
+  - Running giveaway draws from tweet replies
+  - Monitoring X/Twitter accounts for new activity
+  - Composing algorithm-optimized tweets
+  - Extracting bulk data from X/Twitter (followers, replies, communities)
+  - Downloading tweet media or uploading images
+  - Sending DMs or updating X/Twitter profile
 metadata: {"openclaw":{"emoji":"🐦","primaryEnv":"XQUIK_API_KEY","requires":{"env":["XQUIK_API_KEY"]}}}
 ---
 
@@ -126,3 +135,10 @@ Free tier (no subscription): tweet composition, style analysis, drafts, curated 
 Subscription ($20/month): write actions, search, media, extractions, draws, monitors, X trending.
 
 When a paid endpoint returns 402, TweetClaw provides a checkout URL.
+
+## When NOT to Use
+
+- Reading tweets in a browser or basic browsing (use a browser skill instead)
+- X/Twitter analytics dashboards (TweetClaw returns raw data, not visualizations)
+- Scheduling tweets for future posting (Xquik posts immediately)
+- Managing X/Twitter ads or promoted content (not supported)

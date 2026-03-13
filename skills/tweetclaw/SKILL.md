@@ -11,7 +11,7 @@ read_when:
   - Extracting bulk data from X/Twitter (followers, replies, communities)
   - Downloading tweet media or uploading images
   - Sending DMs or updating X/Twitter profile
-metadata: {"openclaw":{"emoji":"🐦","primaryEnv":"XQUIK_API_KEY","requires":{"env":["XQUIK_API_KEY"]}}}
+metadata: {"openclaw":{"emoji":"🐦","primaryEnv":"XQUIK_API_KEY","requires":{"env":["XQUIK_API_KEY"]},"tags":["twitter","x","automation","social-media","tweets","scraping","giveaway","monitoring","rest-api"]}}
 ---
 
 # TweetClaw
@@ -21,6 +21,27 @@ OpenClaw plugin for X/Twitter automation powered by Xquik. Install via:
 ```bash
 openclaw plugins install @xquik/tweetclaw
 ```
+
+## When to Use
+
+Use TweetClaw when the user wants to:
+
+- Post tweets, reply to tweets, or delete tweets
+- Like, retweet, or follow/unfollow users
+- Send DMs on X/Twitter
+- Update their X profile, avatar, or banner
+- Upload media and tweet with images
+- Search tweets or look up user profiles
+- Extract bulk data (followers, replies, communities, spaces)
+- Run giveaway draws from tweet replies
+- Monitor X accounts for new activity
+- Compose algorithm-optimized tweets
+- Analyze a user's writing style
+- Check trending topics on X
+- Download tweet media (images, videos, GIFs)
+- Set up Telegram alerts for monitor events
+
+Do NOT use TweetClaw for browsing X in a browser, analytics dashboards, scheduling future posts, or managing X ads.
 
 ## Configuration
 
@@ -200,9 +221,13 @@ Subscription ($20/month): write actions, search, media, extractions, draws, moni
 
 When a paid endpoint returns 402, TweetClaw provides a checkout URL.
 
-## When NOT to Use
+## Tips
 
-- Reading tweets in a browser or basic browsing (use a browser skill instead)
-- X/Twitter analytics dashboards (TweetClaw returns raw data, not visualizations)
-- Scheduling tweets for future posting (Xquik posts immediately)
-- Managing X/Twitter ads or promoted content (not supported)
+- Use `explore` first to discover endpoints before calling `tweetclaw` - saves tokens and avoids guessing
+- Free endpoints (compose, styles, radar, drafts) work without a subscription - always try them first
+- Never combine free and paid API calls in the same `Promise.all` - a 402 on one call kills all results
+- For write actions (post, like, follow, DM), always pass the `account` parameter with the X username
+- Follow/unfollow/DM require a numeric user ID - look up the user first via `/api/v1/x/users/:username`
+- On 402 errors, call `POST /api/v1/subscribe` to get a checkout URL instead of giving up
+- Use `/xstatus` to quickly check subscription and usage without invoking the AI agent
+- The compose workflow (compose/refine/score) is free and helps draft high-engagement tweets

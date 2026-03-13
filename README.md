@@ -1,6 +1,6 @@
 # TweetClaw
 
-Post tweets, reply, like, retweet, follow, DM & more - directly from your chat. Full X/Twitter automation for [OpenClaw](https://github.com/nicepkg/openclaw).
+Post tweets, reply, like, retweet, follow, DM & more - directly from your chat. Full X/Twitter automation for [OpenClaw](https://github.com/openclaw/openclaw).
 
 Powered by [Xquik](https://xquik.com), the all-in-one X automation platform.
 

@@ -1,6 +1,6 @@
 {
   "name": "@xquik/tweetclaw",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "X/Twitter automation for OpenClaw - search, post, extract, draw, monitor via Xquik",
   "license": "MIT",
   "type": "module",

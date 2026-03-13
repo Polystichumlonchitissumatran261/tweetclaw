@@ -4,6 +4,17 @@
   "description": "Post tweets, reply, like, retweet, follow, DM & more from OpenClaw - full X/Twitter automation via Xquik",
   "license": "MIT",
   "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Xquik-dev/tweetclaw.git"
+  },
+  "homepage": "https://github.com/Xquik-dev/tweetclaw#readme",
+  "bugs": {
+    "url": "https://github.com/Xquik-dev/tweetclaw/issues"
+  },
+  "engines": {
+    "node": ">=22"
+  },
   "openclaw": {
     "extensions": [
       "./src/index.ts"

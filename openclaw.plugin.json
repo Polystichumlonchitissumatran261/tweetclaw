@@ -1,0 +1,24 @@
+{
+  "id": "tweetclaw",
+  "name": "TweetClaw",
+  "version": "1.0.0",
+  "description": "X/Twitter automation powered by Xquik — search tweets, post, extract data, run giveaways, monitor accounts, compose with AI",
+  "author": "Xquik",
+  "license": "MIT",
+  "configSchema": {
+    "type": "object",
+    "properties": {
+      "apiKey": { "type": "string", "description": "Xquik API key (get one at xquik.com/account-manager)" },
+      "baseUrl": { "type": "string", "default": "https://xquik.com" },
+      "pollingInterval": { "type": "number", "default": 60, "description": "Event polling interval in seconds" },
+      "pollingEnabled": { "type": "boolean", "default": true }
+    },
+    "required": ["apiKey"]
+  },
+  "uiHints": {
+    "apiKey": { "label": "Xquik API Key", "sensitive": true, "placeholder": "xq_..." },
+    "baseUrl": { "label": "API Base URL", "placeholder": "https://xquik.com" },
+    "pollingInterval": { "label": "Event Poll Interval (seconds)" },
+    "pollingEnabled": { "label": "Enable Event Notifications" }
+  }
+}

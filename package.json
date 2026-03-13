@@ -1,0 +1,26 @@
+{
+  "name": "@xquik/tweetclaw",
+  "version": "1.0.0",
+  "description": "X/Twitter automation for OpenClaw — search, post, extract, draw, monitor via Xquik",
+  "license": "MIT",
+  "type": "module",
+  "openclaw": {
+    "extensions": ["./src/index.ts"]
+  },
+  "files": ["src/", "openclaw.plugin.json"],
+  "keywords": ["openclaw-plugin", "twitter", "x", "automation", "tweetclaw", "xquik"],
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:coverage": "vitest run --coverage",
+    "lint": "tsc --noEmit"
+  },
+  "peerDependencies": {
+    "openclaw": ">=2026.2.0"
+  },
+  "devDependencies": {
+    "@sinclair/typebox": "^0.34.0",
+    "typescript": "^5.8.0",
+    "vitest": "^3.1.0"
+  }
+}

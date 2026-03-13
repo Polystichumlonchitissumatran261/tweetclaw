@@ -1,0 +1,56 @@
+interface EndpointParameter {
+  readonly description: string;
+  readonly in: 'body' | 'path' | 'query';
+  readonly name: string;
+  readonly required: boolean;
+  readonly type: string;
+}
+
+interface EndpointInfo {
+  readonly category: string;
+  readonly free: boolean;
+  readonly method: string;
+  readonly parameters?: readonly EndpointParameter[];
+  readonly path: string;
+  readonly responseShape?: string;
+  readonly summary: string;
+}
+
+interface RequestOptions {
+  readonly body?: unknown;
+  readonly method?: string;
+  readonly query?: Readonly<Record<string, string>>;
+}
+
+type RequestFunction = (path: string, options?: Readonly<RequestOptions>) => Promise<unknown>;
+
+type FetchFunction = typeof fetch;
+
+interface ToolResult {
+  readonly content: ReadonlyArray<{ readonly text: string; readonly type: 'text' }>;
+  readonly isError?: true;
+}
+
+interface PluginConfig {
+  readonly apiKey: string;
+  readonly baseUrl?: string;
+  readonly pollingEnabled?: boolean;
+  readonly pollingInterval?: number;
+}
+
+interface EventPollerOptions {
+  readonly intervalSeconds: number;
+  readonly onEvents: (events: ReadonlyArray<Record<string, unknown>>) => void;
+  readonly request: RequestFunction;
+}
+
+export type {
+  EndpointInfo,
+  EndpointParameter,
+  EventPollerOptions,
+  FetchFunction,
+  PluginConfig,
+  RequestFunction,
+  RequestOptions,
+  ToolResult,
+};

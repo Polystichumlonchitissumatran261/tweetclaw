@@ -15,66 +15,64 @@ function isPollerEvent(value: unknown): value is PollerEvent {
   return typeof value === 'object' && value !== null;
 }
 
+function isPluginConfig(value: unknown): value is PluginConfig {
+  return typeof value === 'object' && value !== null && 'apiKey' in value;
+}
+
 const DEFAULT_POLLING_INTERVAL_SECONDS = 60;
+
+interface ToolResult {
+  readonly content: ReadonlyArray<{ readonly text: string; readonly type: string }>;
+  readonly isError?: true;
+}
 
 interface CommandContext {
   readonly args?: string;
+  readonly commandBody?: string;
+  readonly senderId?: string;
 }
 
 interface OpenClawApi {
-  readonly config: {
-    readonly plugins?: {
-      readonly entries?: {
-        readonly tweetclaw?: {
-          readonly config?: PluginConfig;
-        };
-      };
-    };
-  };
   readonly logger: {
+    readonly debug?: (message: string) => void;
+    readonly error: (message: string) => void;
     readonly info: (message: string) => void;
     readonly warn: (message: string) => void;
   };
+  readonly pluginConfig?: Readonly<Record<string, unknown>>;
   readonly registerCommand: (options: {
-    readonly acceptsArguments?: boolean;
+    readonly acceptsArgs?: boolean;
     readonly description: string;
     readonly handler: (context: CommandContext) => Promise<{ readonly text: string }>;
     readonly name: string;
   }) => void;
   readonly registerService: (options: {
     readonly id: string;
-    readonly start: () => void;
-    readonly stop: () => void;
+    readonly start: (context?: unknown) => void;
+    readonly stop?: (context?: unknown) => void;
   }) => void;
   readonly registerTool: (
-    options: {
+    tool: {
       readonly description: string;
+      readonly execute: (toolCallId: string, params: { readonly code: string }) => Promise<ToolResult>;
       readonly name: string;
-      readonly parameters: {
-        readonly properties: Readonly<Record<string, { readonly description: string; readonly type: string }>>;
-        readonly required: readonly string[];
-        readonly type: string;
-      };
+      readonly parameters: unknown;
     },
-    handler: (params: { readonly code: string }) => Promise<{
-      readonly content: ReadonlyArray<{ readonly text: string; readonly type: string }>;
-      readonly isError?: true;
-    }>,
+    options?: { readonly name?: string; readonly optional?: boolean },
   ) => void;
-  readonly sendMessage: (text: string) => void;
 }
 
 const CODE_PARAMETER = {
   properties: {
     code: { description: 'Async arrow function to execute', type: 'string' },
   },
-  required: ['code'] as const,
+  required: ['code'],
   type: 'object',
 };
 
 export default function register(api: OpenClawApi, fetchFunction?: FetchFunction): void {
-  const config = api.config.plugins?.entries?.tweetclaw?.config;
-  if (config?.apiKey === undefined) {
+  const config: unknown = api.pluginConfig;
+  if (!isPluginConfig(config)) {
     api.logger.warn(
       "TweetClaw: No API key configured. Run: openclaw config set plugins.entries.tweetclaw.config.apiKey 'xq_YOUR_KEY'",
     );
@@ -84,23 +82,25 @@ export default function register(api: OpenClawApi, fetchFunction?: FetchFunction
   const { apiKey, baseUrl = 'https://xquik.com' } = config;
   const request = createProxiedRequest(baseUrl, apiKey, fetchFunction);
 
-  // --- Tools (2-tool approach) ---
+  // --- Tools (2-tool approach, execute inside tool object) ---
   api.registerTool(
     {
       description: SEARCH_DESCRIPTION,
+      execute: async (_toolCallId, { code }) => handleExplore(code),
       name: 'explore',
       parameters: CODE_PARAMETER,
     },
-    async ({ code }) => handleExplore(code),
+    { name: 'explore' },
   );
 
   api.registerTool(
     {
       description: EXECUTE_DESCRIPTION,
+      execute: async (_toolCallId, { code }) => handleTweetclaw({ apiKey, baseUrl, code, fetchFunction }),
       name: 'tweetclaw',
       parameters: CODE_PARAMETER,
     },
-    async ({ code }) => handleTweetclaw({ apiKey, baseUrl, code, fetchFunction }),
+    { name: 'tweetclaw', optional: true },
   );
 
   // --- Commands (instant, no LLM) ---
@@ -114,7 +114,7 @@ export default function register(api: OpenClawApi, fetchFunction?: FetchFunction
   });
 
   api.registerCommand({
-    acceptsArguments: true,
+    acceptsArgs: true,
     description: 'Show trending topics on X',
     handler: async ({ args }) => {
       const text = await handleXTrends(request, args);
@@ -136,7 +136,7 @@ export default function register(api: OpenClawApi, fetchFunction?: FetchFunction
           const username: string = isPollerEvent(event) && typeof event.xUsername === 'string'
             ? event.xUsername
             : '';
-          api.sendMessage(`[TweetClaw] ${eventType} from @${username}`);
+          api.logger.info(`[TweetClaw] ${eventType} from @${username}`);
         }
       },
       request,

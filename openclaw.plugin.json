@@ -1,6 +1,7 @@
 {
   "id": "tweetclaw",
   "name": "TweetClaw",
+  "version": "1.2.0",
   "description": "Post tweets, reply, like, retweet, follow, DM from your chat - full X/Twitter automation powered by Xquik",
   "configSchema": {
     "type": "object",

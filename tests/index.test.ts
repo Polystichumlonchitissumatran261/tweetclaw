@@ -4,13 +4,13 @@ import type { ToolResult } from '../src/types.js';
 
 interface RegisteredTool {
   readonly description: string;
-  readonly handler: (params: { readonly code: string }) => Promise<ToolResult>;
+  readonly execute: (toolCallId: string, params: { readonly code: string }) => Promise<ToolResult>;
   readonly name: string;
   readonly parameters: unknown;
 }
 
 interface RegisteredCommand {
-  readonly acceptsArguments?: boolean;
+  readonly acceptsArgs?: boolean;
   readonly description: string;
   readonly handler: (context: { readonly args?: string }) => Promise<{ readonly text: string }>;
   readonly name: string;
@@ -19,17 +19,17 @@ interface RegisteredCommand {
 interface RegisteredService {
   readonly id: string;
   readonly start: () => void;
-  readonly stop: () => void;
+  readonly stop?: () => void;
 }
 
 function createMockFetch(response: unknown): typeof fetch {
   return async () => new Response(JSON.stringify(response));
 }
 
-function createMockApi(config?: unknown): {
+function createMockApi(pluginConfig?: unknown): {
   readonly api: Parameters<typeof register>[0];
   readonly commands: RegisteredCommand[];
-  readonly messages: string[];
+  readonly infos: string[];
   readonly services: RegisteredService[];
   readonly tools: RegisteredTool[];
   readonly warnings: string[];
@@ -38,29 +38,21 @@ function createMockApi(config?: unknown): {
   const commands: RegisteredCommand[] = [];
   const services: RegisteredService[] = [];
   const warnings: string[] = [];
-  const messages: string[] = [];
+  const infos: string[] = [];
 
   const api: Parameters<typeof register>[0] = {
-    config: {
-      plugins: {
-        entries: {
-          tweetclaw: {
-            config: config as Parameters<typeof register>[0]['config']['plugins'],
-          },
-        },
-      },
-    },
     logger: {
-      info: () => {},
+      error: () => {},
+      info: (message: string) => { infos.push(message); },
       warn: (message: string) => { warnings.push(message); },
     },
+    pluginConfig: pluginConfig as Readonly<Record<string, unknown>> | undefined,
     registerCommand: (options) => { commands.push(options); },
     registerService: (options) => { services.push(options); },
-    registerTool: (options, handler) => { tools.push({ ...options, handler }); },
-    sendMessage: (text: string) => { messages.push(text); },
+    registerTool: (tool) => { tools.push(tool); },
   };
 
-  return { api, commands, messages, services, tools, warnings };
+  return { api, commands, infos, services, tools, warnings };
 }
 
 beforeEach(() => {
@@ -142,27 +134,27 @@ describe('register', () => {
     register(api);
     const [pollerService] = services;
     pollerService?.start();
-    pollerService?.stop();
+    pollerService?.stop?.();
     expect(true).toBe(true);
   });
 
-  it('explore tool handler executes code against spec', async () => {
+  it('explore tool execute runs code against spec', async () => {
     expect.assertions(1);
     const { api, tools } = createMockApi({ apiKey: 'xq_test123' });
     register(api);
     const explore = tools.find((tool) => tool.name === 'explore');
-    const result = await explore?.handler({ code: 'async () => spec.endpoints.length' });
+    const result = await explore?.execute('call_1', { code: 'async () => spec.endpoints.length' });
     const count = Number(result?.content[0]?.text);
     expect(count).toBeGreaterThan(40);
   });
 
-  it('tweetclaw tool handler executes code', async () => {
+  it('tweetclaw tool execute runs code', async () => {
     expect.assertions(1);
     const mockFetch = createMockFetch({ email: 'test@example.com' });
     const { api, tools } = createMockApi({ apiKey: 'xq_test123' });
     register(api, mockFetch);
     const tweetclaw = tools.find((tool) => tool.name === 'tweetclaw');
-    const result = await tweetclaw?.handler({
+    const result = await tweetclaw?.execute('call_2', {
       code: `async () => xquik.request('/api/v1/account')`,
     });
     expect(result?.content[0]?.text).toContain('test@example.com');
@@ -188,18 +180,18 @@ describe('register', () => {
     expect(result?.text).toContain('AI Agents');
   });
 
-  it('event poller sends messages for events with known types', async () => {
+  it('event poller logs events with known types', async () => {
     expect.assertions(1);
     const mockFetch = createMockFetch({
       events: [{ eventType: 'monitor_event', id: 'evt_1', xUsername: 'testuser' }],
     });
-    const { api, messages, services } = createMockApi({ apiKey: 'xq_test123', pollingInterval: 1 });
+    const { api, infos, services } = createMockApi({ apiKey: 'xq_test123', pollingInterval: 1 });
     register(api, mockFetch);
     const [pollerService] = services;
     pollerService?.start();
     await vi.advanceTimersByTimeAsync(1500);
-    pollerService?.stop();
-    expect(messages.some((message) => message.includes('monitor_event'))).toBe(true);
+    pollerService?.stop?.();
+    expect(infos.some((message) => message.includes('monitor_event'))).toBe(true);
   });
 
   it('event poller handles events without type or username', async () => {
@@ -207,12 +199,12 @@ describe('register', () => {
     const mockFetch = createMockFetch({
       events: [{ id: 'evt_2' }],
     });
-    const { api, messages, services } = createMockApi({ apiKey: 'xq_test123', pollingInterval: 1 });
+    const { api, infos, services } = createMockApi({ apiKey: 'xq_test123', pollingInterval: 1 });
     register(api, mockFetch);
     const [pollerService] = services;
     pollerService?.start();
     await vi.advanceTimersByTimeAsync(1500);
-    pollerService?.stop();
-    expect(messages.some((message) => message.includes('unknown'))).toBe(true);
+    pollerService?.stop?.();
+    expect(infos.some((message) => message.includes('unknown'))).toBe(true);
   });
 });

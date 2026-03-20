@@ -296,10 +296,12 @@ async () => {
 \`\`\`
 
 ## Cost
-- Free: /api/v1/compose, /api/v1/styles (cached lookup/save/delete/compare), /api/v1/drafts, /api/v1/radar, /api/v1/subscribe, /api/v1/account, /api/v1/api-keys, /api/v1/bot/*, /api/v1/integrations/*, /api/v1/x/accounts
-- Subscription required: /api/v1/styles (X API refresh when cache >7 days), /api/v1/x/tweets, /api/v1/x/users, /api/v1/x/followers, /api/v1/x/media, /api/v1/x/profile, /api/v1/x/communities, /api/v1/x/dm, /api/v1/extractions, /api/v1/draws, /api/v1/monitors, /api/v1/events, /api/v1/webhooks, /api/v1/styles/:username/performance, /api/v1/trends, /api/v1/trending/:source
+- Free: /api/v1/compose, /api/v1/styles (cached lookup/save/delete/compare), /api/v1/drafts, /api/v1/radar, /api/v1/subscribe, /api/v1/account, /api/v1/api-keys, /api/v1/bot/*, /api/v1/integrations/*, /api/v1/x/accounts, /api/v1/automations/*, /api/v1/support/*
+- MPP pay-per-use (no account/subscription needed, 7 endpoints): GET /api/v1/x/tweets/:id ($0.0003/call), GET /api/v1/x/tweets/search ($0.0003/tweet), GET /api/v1/x/users/:username ($0.00036/call), GET /api/v1/x/followers/check ($0.002/call), GET /api/v1/x/articles/:tweetId ($0.002/call), POST /api/v1/x/media/download ($0.0003/media), GET /api/v1/trends ($0.0009/call)
+- Subscription required: /api/v1/styles (X API refresh when cache >7 days), /api/v1/x/profile, /api/v1/x/communities, /api/v1/x/dm, /api/v1/extractions, /api/v1/draws, /api/v1/monitors, /api/v1/events, /api/v1/webhooks, /api/v1/styles/:username/performance, /api/v1/trending/:source
 - Write actions (subscription required): POST /api/v1/x/tweets, DELETE /api/v1/x/tweets/:id, POST|DELETE /api/v1/x/tweets/:id/like, POST /api/v1/x/tweets/:id/retweet, POST|DELETE /api/v1/x/users/:id/follow, POST /api/v1/x/dm/:userId, POST /api/v1/x/media, PATCH /api/v1/x/profile, PATCH /api/v1/x/profile/avatar, PATCH /api/v1/x/profile/banner, POST|DELETE /api/v1/x/communities, POST|DELETE /api/v1/x/communities/:id/join
 - IMPORTANT: Always attempt the request. Never assume subscription status. The API returns a clear error if subscription is missing.
+- MPP MODE: When configured with tempoPrivateKey (no API key), the mppx SDK auto-handles 402 challenges by paying via Tempo (USDC). Only the 7 MPP-eligible endpoints work in this mode.
 
 ## Error handling
 - If response contains "subscription is inactive" or status 402, call POST /api/v1/subscribe to get checkout URL

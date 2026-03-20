@@ -21,13 +21,16 @@ const EXTRACTION_SEARCH_PARAMS: readonly EndpointParameter[] = [
   { description: 'Language code filter, e.g. en, tr (tweet_search_extractor)', in: 'body', name: 'language', required: false, type: 'string' },
   { description: 'Start date YYYY-MM-DD (tweet_search_extractor)', in: 'body', name: 'sinceDate', required: false, type: 'string' },
   { description: 'End date YYYY-MM-DD (tweet_search_extractor)', in: 'body', name: 'untilDate', required: false, type: 'string' },
-  { description: 'Filter by media type: images, videos, links (tweet_search_extractor)', in: 'body', name: 'mediaType', required: false, type: 'string' },
+  { description: 'Filter by media type: images, videos, gifs, media (tweet_search_extractor)', in: 'body', name: 'mediaType', required: false, type: 'string' },
   { description: 'Minimum likes threshold (tweet_search_extractor)', in: 'body', name: 'minFaves', required: false, type: 'number' },
   { description: 'Minimum retweets threshold (tweet_search_extractor)', in: 'body', name: 'minRetweets', required: false, type: 'number' },
   { description: 'Minimum replies threshold (tweet_search_extractor)', in: 'body', name: 'minReplies', required: false, type: 'number' },
   { description: 'Only verified authors (tweet_search_extractor)', in: 'body', name: 'verifiedOnly', required: false, type: 'boolean' },
-  { description: 'Include or exclude replies (tweet_search_extractor): include, exclude', in: 'body', name: 'replies', required: false, type: 'string' },
-  { description: 'Include or exclude retweets (tweet_search_extractor): include, exclude', in: 'body', name: 'retweets', required: false, type: 'string' },
+  { description: 'Control reply inclusion (tweet_search_extractor): include, exclude, only', in: 'body', name: 'replies', required: false, type: 'string' },
+  { description: 'Control retweet inclusion (tweet_search_extractor): include, exclude, only', in: 'body', name: 'retweets', required: false, type: 'string' },
+  { description: 'Exact phrase match (tweet_search_extractor)', in: 'body', name: 'exactPhrase', required: false, type: 'string' },
+  { description: 'Comma-separated words to exclude (tweet_search_extractor)', in: 'body', name: 'excludeWords', required: false, type: 'string' },
+  { description: 'Raw X search operators (tweet_search_extractor)', in: 'body', name: 'advancedQuery', required: false, type: 'string' },
 ];
 
 const PARAM_STYLE_USERNAME: EndpointParameter =
@@ -84,7 +87,15 @@ const PARAM_MEDIA_URL: EndpointParameter =
   { description: 'URL to download media from (alternative to file, HTTPS only)', in: 'body', name: 'url', required: false, type: 'string' };
 
 const RESPONSE_COMMUNITY_ACTION = '{ communityId, communityName, success: true }';
+const CATEGORY_AUTOMATIONS = 'automations';
+const CATEGORY_SUPPORT = 'support';
 const CATEGORY_X_WRITE = 'x-write';
+
+const PARAM_AUTOMATION_SLUG: EndpointParameter =
+  { description: 'Flow slug', in: 'path', name: 'slug', required: true, type: 'string' };
+
+const PARAM_TICKET_ID: EndpointParameter =
+  { description: 'Ticket public ID', in: 'path', name: 'id', required: true, type: 'string' };
 
 const API_SPEC: readonly EndpointInfo[] = [
   // --- Account ---
@@ -305,13 +316,14 @@ const API_SPEC: readonly EndpointInfo[] = [
     method: 'GET',
     parameters: [
       { description: 'Filter by category (general, tech, dev, etc.)', in: 'query', name: 'category', required: false, type: 'string' },
-      { description: 'Number of items to return', in: 'query', name: 'count', required: false, type: 'number' },
-      { description: 'Lookback window in hours', in: 'query', name: 'hours', required: false, type: 'number' },
-      { description: 'Region filter (us, global, etc.)', in: 'query', name: 'region', required: false, type: 'string' },
-      { description: 'Source filter (google, hackernews, reddit, etc.)', in: 'query', name: 'source', required: false, type: 'string' },
+      { description: 'Max items to return (1-100, default 50)', in: 'query', name: 'limit', required: false, type: 'number' },
+      { description: 'Lookback window in hours (1-72, default 6)', in: 'query', name: 'hours', required: false, type: 'number' },
+      { description: 'Region filter (US, GB, TR, ES, DE, FR, JP, IN, BR, CA, MX, global)', in: 'query', name: 'region', required: false, type: 'string' },
+      { description: 'Source filter (github, google_trends, hacker_news, polymarket, reddit, trustmrr, wikipedia)', in: 'query', name: 'source', required: false, type: 'string' },
+      { description: DESCRIPTION_PAGINATION_CURSOR, in: 'query', name: 'after', required: false, type: 'string' },
     ],
     path: '/api/v1/radar',
-    responseShape: '{ items: [{ title, url?, score, category, source, region, publishedAt }], total }',
+    responseShape: '{ items: [{ title, url?, score, category, source, region, publishedAt }], hasMore, nextCursor? }',
     summary: 'Get trending topics from curated radar sources',
   },
 
@@ -374,10 +386,13 @@ const API_SPEC: readonly EndpointInfo[] = [
     free: false,
     method: 'POST',
     parameters: [
-      { description: 'Extraction tool type (reply-extractor, community-explorer, etc.)', in: 'body', name: 'toolType', required: true, type: 'string' },
+      { description: 'Extraction tool type (reply_extractor, community_extractor, etc.)', in: 'body', name: 'toolType', required: true, type: 'string' },
       { description: 'Target X username', in: 'body', name: 'targetUsername', required: false, type: 'string' },
       { description: 'Target tweet ID', in: 'body', name: 'targetTweetId', required: false, type: 'string' },
-      { description: 'Search query for tweet search tools', in: 'body', name: 'searchQuery', required: false, type: 'string' },
+      { description: 'Search query for search tools', in: 'body', name: 'searchQuery', required: false, type: 'string' },
+      { description: 'Community ID for community tools', in: 'body', name: 'targetCommunityId', required: false, type: 'string' },
+      { description: 'List ID for list tools', in: 'body', name: 'targetListId', required: false, type: 'string' },
+      { description: 'Space ID for space_explorer', in: 'body', name: 'targetSpaceId', required: false, type: 'string' },
       { description: 'Max results to return', in: 'body', name: 'resultsLimit', required: false, type: 'number' },
       ...EXTRACTION_SEARCH_PARAMS,
     ],
@@ -393,6 +408,10 @@ const API_SPEC: readonly EndpointInfo[] = [
       { description: 'Extraction tool type', in: 'body', name: 'toolType', required: true, type: 'string' },
       { description: 'Target X username', in: 'body', name: 'targetUsername', required: false, type: 'string' },
       { description: 'Target tweet ID', in: 'body', name: 'targetTweetId', required: false, type: 'string' },
+      { description: 'Search query for search tools', in: 'body', name: 'searchQuery', required: false, type: 'string' },
+      { description: 'Community ID for community tools', in: 'body', name: 'targetCommunityId', required: false, type: 'string' },
+      { description: 'List ID for list tools', in: 'body', name: 'targetListId', required: false, type: 'string' },
+      { description: 'Space ID for space_explorer', in: 'body', name: 'targetSpaceId', required: false, type: 'string' },
       { description: 'Max results to return', in: 'body', name: 'resultsLimit', required: false, type: 'number' },
       ...EXTRACTION_SEARCH_PARAMS,
     ],
@@ -569,6 +588,7 @@ const API_SPEC: readonly EndpointInfo[] = [
     parameters: [
       { description: 'Tweet ID to look up', in: 'path', name: 'tweetId', required: true, type: 'string' },
     ],
+    mpp: { intent: 'charge', price: '$0.0003/call' },
     path: '/api/v1/x/tweets/:tweetId',
     responseShape: '{ tweet: { id, text, likeCount, retweetCount, replyCount, viewCount, ... }, author? }',
     summary: 'Look up a single tweet with engagement metrics',
@@ -581,6 +601,7 @@ const API_SPEC: readonly EndpointInfo[] = [
       { description: 'Search query (X search syntax)', in: 'query', name: 'q', required: true, type: 'string' },
       { description: 'Max tweets to return (default 20, max 200)', in: 'query', name: 'limit', required: false, type: 'number' },
     ],
+    mpp: { intent: 'session', price: '$0.0003/tweet' },
     path: '/api/v1/x/tweets/search',
     responseShape: '{ tweets: [{ id, text, author?, likeCount?, retweetCount?, media? }], total }',
     summary: 'Search tweets by query with optional limit for pagination',
@@ -592,6 +613,7 @@ const API_SPEC: readonly EndpointInfo[] = [
     parameters: [
       { description: 'X username to look up', in: 'path', name: 'username', required: true, type: 'string' },
     ],
+    mpp: { intent: 'charge', price: '$0.00036/call' },
     path: '/api/v1/x/users/:username',
     responseShape: '{ id, username, name, followers?, following?, verified?, description? }',
     summary: 'Get X user profile by username',
@@ -604,9 +626,22 @@ const API_SPEC: readonly EndpointInfo[] = [
       { description: 'Source username', in: 'query', name: 'source', required: true, type: 'string' },
       { description: 'Target username', in: 'query', name: 'target', required: true, type: 'string' },
     ],
+    mpp: { intent: 'charge', price: '$0.002/call' },
     path: '/api/v1/x/followers/check',
     responseShape: '{ isFollowing, isFollowedBy, sourceUsername, targetUsername }',
     summary: 'Check follow relationship between two users',
+  },
+  {
+    category: 'twitter',
+    free: false,
+    method: 'GET',
+    parameters: [
+      { description: 'Tweet ID of the X Article', in: 'path', name: 'tweetId', required: true, type: 'string' },
+    ],
+    mpp: { intent: 'charge', price: '$0.002/call' },
+    path: '/api/v1/x/articles/:tweetId',
+    responseShape: '{ article: { title, previewText, coverImageUrl, contents, createdAt, likeCount, replyCount, quoteCount, viewCount }, author? }',
+    summary: 'Get full content of an X Article (long-form post) by tweet ID',
   },
 
   // --- Media ---
@@ -618,6 +653,7 @@ const API_SPEC: readonly EndpointInfo[] = [
       { description: 'Tweet URL or ID (single tweet)', in: 'body', name: 'tweetInput', required: false, type: 'string' },
       { description: 'Array of tweet URLs or IDs (bulk, max 50)', in: 'body', name: 'tweetIds', required: false, type: 'string[]' },
     ],
+    mpp: { intent: 'session', price: '$0.0003/media' },
     path: '/api/v1/x/media/download',
     responseShape: 'Single: { tweetId, galleryUrl, cacheHit }. Bulk: { galleryUrl, totalTweets, totalMedia }',
     summary: 'Download media from tweets. Single tweetInput or bulk tweetIds. Returns gallery URL.',
@@ -632,6 +668,7 @@ const API_SPEC: readonly EndpointInfo[] = [
       { description: 'WOEID location ID (1 for worldwide)', in: 'query', name: 'woeid', required: false, type: 'number' },
       { description: 'Max number of trends', in: 'query', name: 'count', required: false, type: 'number' },
     ],
+    mpp: { intent: 'charge', price: '$0.0009/call' },
     path: '/api/v1/trends',
     responseShape: '{ trends: [{ name, query?, description?, rank? }], total, woeid }',
     summary: 'Get current trending topics on X',
@@ -1018,6 +1055,201 @@ const API_SPEC: readonly EndpointInfo[] = [
     path: '/api/v1/x/communities/:id/join',
     responseShape: RESPONSE_COMMUNITY_ACTION,
     summary: 'Leave community',
+  },
+
+  // --- Automations ---
+  {
+    category: CATEGORY_AUTOMATIONS,
+    free: true,
+    method: 'GET',
+    path: '/api/v1/automations',
+    responseShape: '{ items: [{ id, name, slug, triggerType, triggerConfig, isActive, runCount, lastRunAt, createdAt, updatedAt }] }',
+    summary: 'List all automation flows',
+  },
+  {
+    category: CATEGORY_AUTOMATIONS,
+    free: true,
+    method: 'POST',
+    parameters: [
+      { description: 'Flow name', in: 'body', name: 'name', required: true, type: 'string' },
+      { description: 'Trigger type: monitor_event, schedule, search, webhook_inbound', in: 'body', name: 'triggerType', required: true, type: 'string' },
+      { description: 'Trigger-specific configuration', in: 'body', name: 'triggerConfig', required: true, type: 'object' },
+      { description: 'Template slug to scaffold from', in: 'body', name: 'templateSlug', required: false, type: 'string' },
+    ],
+    path: '/api/v1/automations',
+    responseShape: '{ id, name, slug, triggerType, triggerConfig, isActive, createdAt, updatedAt }',
+    summary: 'Create a new automation flow',
+  },
+  {
+    category: CATEGORY_AUTOMATIONS,
+    free: true,
+    method: 'GET',
+    parameters: [PARAM_AUTOMATION_SLUG],
+    path: '/api/v1/automations/:slug',
+    responseShape: '{ id, name, slug, triggerType, triggerConfig, isActive, steps, recentRuns, createdAt, updatedAt }',
+    summary: 'Get flow details with steps and recent runs',
+  },
+  {
+    category: CATEGORY_AUTOMATIONS,
+    free: true,
+    method: 'PATCH',
+    parameters: [
+      PARAM_AUTOMATION_SLUG,
+      { description: 'Current updatedAt for optimistic concurrency', in: 'body', name: 'expectedUpdatedAt', required: true, type: 'string' },
+      { description: 'Updated flow name', in: 'body', name: 'name', required: false, type: 'string' },
+      { description: 'Updated trigger type', in: 'body', name: 'triggerType', required: false, type: 'string' },
+      { description: 'Updated trigger config', in: 'body', name: 'triggerConfig', required: false, type: 'object' },
+      { description: 'Activate or deactivate', in: 'body', name: 'isActive', required: false, type: 'boolean' },
+    ],
+    path: '/api/v1/automations/:slug',
+    responseShape: '{ id, name, slug, triggerType, triggerConfig, isActive, createdAt, updatedAt }',
+    summary: 'Update flow name, trigger, or active status',
+  },
+  {
+    category: CATEGORY_AUTOMATIONS,
+    free: true,
+    method: 'DELETE',
+    parameters: [PARAM_AUTOMATION_SLUG],
+    path: '/api/v1/automations/:slug',
+    responseShape: RESPONSE_SUCCESS,
+    summary: 'Delete a flow and all its steps',
+  },
+  {
+    category: CATEGORY_AUTOMATIONS,
+    free: true,
+    method: 'POST',
+    parameters: [
+      PARAM_AUTOMATION_SLUG,
+      { description: 'Step type: action, condition, extraction', in: 'body', name: 'stepType', required: true, type: 'string' },
+      { description: 'Branch: main, if_true, if_false', in: 'body', name: 'branch', required: true, type: 'string' },
+      { description: 'Step-specific configuration', in: 'body', name: 'config', required: true, type: 'object' },
+      { description: 'Order position in branch', in: 'body', name: 'position', required: false, type: 'number' },
+      { description: 'Parent step ID for condition branches', in: 'body', name: 'parentStepId', required: false, type: 'string' },
+      { description: 'Action type: create_tweet, follow, like, reply_tweet, retweet, send_dm, send_email, send_telegram, unfollow', in: 'body', name: 'actionType', required: false, type: 'string' },
+      { description: 'Extraction tool type', in: 'body', name: 'extractionType', required: false, type: 'string' },
+      { description: 'Variable name for extraction output', in: 'body', name: 'outputName', required: false, type: 'string' },
+    ],
+    path: '/api/v1/automations/:slug/steps',
+    responseShape: '{ id, flowId, stepType, actionType, extractionType, branch, config, position, createdAt }',
+    summary: 'Add an action, condition, or extraction step to a flow',
+  },
+  {
+    category: CATEGORY_AUTOMATIONS,
+    free: true,
+    method: 'PATCH',
+    parameters: [
+      PARAM_AUTOMATION_SLUG,
+      { description: 'Step ID to update', in: 'body', name: 'stepId', required: true, type: 'string' },
+      { description: 'Updated step config', in: 'body', name: 'config', required: false, type: 'object' },
+      { description: 'Updated step type', in: 'body', name: 'stepType', required: false, type: 'string' },
+      { description: 'Updated branch', in: 'body', name: 'branch', required: false, type: 'string' },
+      { description: 'Updated position', in: 'body', name: 'position', required: false, type: 'number' },
+      { description: 'Updated action type', in: 'body', name: 'actionType', required: false, type: 'string' },
+      { description: 'Updated extraction type', in: 'body', name: 'extractionType', required: false, type: 'string' },
+      { description: 'Updated output variable name', in: 'body', name: 'outputName', required: false, type: 'string' },
+    ],
+    path: '/api/v1/automations/:slug/steps',
+    responseShape: '{ id, flowId, stepType, actionType, extractionType, branch, config, position, createdAt }',
+    summary: 'Update a step configuration or position',
+  },
+  {
+    category: CATEGORY_AUTOMATIONS,
+    free: true,
+    method: 'DELETE',
+    parameters: [
+      PARAM_AUTOMATION_SLUG,
+      { description: 'Step ID to delete', in: 'body', name: 'stepId', required: true, type: 'string' },
+    ],
+    path: '/api/v1/automations/:slug/steps',
+    responseShape: RESPONSE_SUCCESS,
+    summary: 'Remove a step from a flow',
+  },
+  {
+    category: CATEGORY_AUTOMATIONS,
+    free: true,
+    method: 'PATCH',
+    parameters: [
+      PARAM_AUTOMATION_SLUG,
+      { description: 'Array of { stepId, positionX, positionY } (max 10)', in: 'body', name: 'positions', required: true, type: 'array' },
+    ],
+    path: '/api/v1/automations/:slug/steps/positions',
+    responseShape: RESPONSE_SUCCESS,
+    summary: 'Batch update canvas positions for flow steps',
+  },
+  {
+    category: CATEGORY_AUTOMATIONS,
+    free: true,
+    method: 'POST',
+    parameters: [PARAM_AUTOMATION_SLUG],
+    path: '/api/v1/automations/:slug/test',
+    responseShape: '{ status, result, runId, error? }',
+    summary: 'Test run a flow with synthetic trigger data',
+  },
+  {
+    category: CATEGORY_AUTOMATIONS,
+    free: true,
+    method: 'POST',
+    parameters: [
+      { description: 'Inbound webhook token', in: 'path', name: 'token', required: true, type: 'string' },
+    ],
+    path: '/api/v1/webhooks/inbound/:token',
+    responseShape: '{ accepted: true, flowId }',
+    summary: 'Trigger a flow via inbound webhook (no auth required, token acts as auth)',
+  },
+
+  // --- Support ---
+  {
+    category: CATEGORY_SUPPORT,
+    free: true,
+    method: 'POST',
+    parameters: [
+      { description: 'Ticket subject (1-500 chars)', in: 'body', name: 'subject', required: true, type: 'string' },
+      { description: 'Initial message (1-10000 chars)', in: 'body', name: 'body', required: true, type: 'string' },
+    ],
+    path: '/api/v1/support/tickets',
+    responseShape: '{ publicId }',
+    summary: 'Open a new support ticket',
+  },
+  {
+    category: CATEGORY_SUPPORT,
+    free: true,
+    method: 'GET',
+    path: '/api/v1/support/tickets',
+    responseShape: '{ tickets: [{ publicId, subject, status, messageCount, createdAt, updatedAt }] }',
+    summary: 'List your support tickets',
+  },
+  {
+    category: CATEGORY_SUPPORT,
+    free: true,
+    method: 'GET',
+    parameters: [PARAM_TICKET_ID],
+    path: '/api/v1/support/tickets/:id',
+    responseShape: '{ publicId, subject, status, messages: [{ body, sender, createdAt }], createdAt, updatedAt }',
+    summary: 'Get a ticket with message history',
+  },
+  {
+    category: CATEGORY_SUPPORT,
+    free: true,
+    method: 'PATCH',
+    parameters: [
+      PARAM_TICKET_ID,
+      { description: 'New status: open, resolved, closed', in: 'body', name: 'status', required: true, type: 'string' },
+    ],
+    path: '/api/v1/support/tickets/:id',
+    responseShape: '{ publicId, status }',
+    summary: 'Update ticket status',
+  },
+  {
+    category: CATEGORY_SUPPORT,
+    free: true,
+    method: 'POST',
+    parameters: [
+      PARAM_TICKET_ID,
+      { description: 'Message content (1-10000 chars)', in: 'body', name: 'body', required: true, type: 'string' },
+    ],
+    path: '/api/v1/support/tickets/:id/messages',
+    responseShape: '{ publicId }',
+    summary: 'Reply to a support ticket',
   },
 ] as const;
 

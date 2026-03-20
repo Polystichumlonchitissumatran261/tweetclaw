@@ -1,6 +1,6 @@
 ---
 name: tweetclaw
-description: "OpenClaw plugin for X/Twitter automation. Post tweets, reply, like, retweet, follow, DM, search, extract data, run giveaways, monitor accounts via Xquik. 40+ endpoints, 2 tools (explore + tweetclaw), 2 commands (/xstatus, /xtrends), background event poller."
+description: "OpenClaw plugin for X/Twitter automation. Post tweets, reply, like, retweet, follow, DM, search, extract data, run giveaways, monitor accounts, automate flows via Xquik. 97 endpoints, 2 tools (explore + tweetclaw), 2 commands (/xstatus, /xtrends), background event poller."
 homepage: https://xquik.com
 read_when:
   - Posting, replying, liking, retweeting, or following on X/Twitter
@@ -40,20 +40,34 @@ Use TweetClaw when the user wants to:
 - Check trending topics on X
 - Download tweet media (images, videos, GIFs)
 - Set up Telegram alerts for monitor events
+- Create and manage automation flows (triggers, steps, test runs)
+- Open and manage support tickets
+- Read X Articles (long-form posts)
 
 Do NOT use TweetClaw for browsing X in a browser, analytics dashboards, scheduling future posts, or managing X ads.
 
 ## Configuration
 
-Set your Xquik API key (get one at [xquik.com/account-manager](https://xquik.com/account-manager)):
+### API key mode (full access)
 
 ```bash
 openclaw config set plugins.entries.tweetclaw.config.apiKey 'xq_YOUR_KEY'
 ```
 
+Get a key at [xquik.com/account-manager](https://xquik.com/account-manager).
+
+### MPP mode (no account, pay-per-use via Tempo/USDC)
+
+```bash
+npm i mppx viem
+openclaw config set plugins.entries.tweetclaw.config.tempoPrivateKey '0xYOUR_KEY'
+```
+
+MPP gives agents access to 7 read-only X-API endpoints without any account or subscription. The mppx SDK handles HTTP 402 payment challenges automatically.
+
 ## Tools
 
-TweetClaw registers 2 tools that cover the entire Xquik API (40+ endpoints):
+TweetClaw registers 2 tools that cover the entire Xquik API (97 endpoints):
 
 ### `explore` (free, no network)
 
@@ -198,6 +212,27 @@ You: "What's trending on X right now?"
 Agent uses tweetclaw -> returns curated trending topics from 7 sources
 ```
 
+### Create an automation flow (free)
+
+```
+You: "Create an automation that sends a DM when I get a new follower"
+Agent uses tweetclaw -> creates flow with monitor_event trigger, adds send_dm step, tests it
+```
+
+### Read an X Article
+
+```
+You: "Get the full article from this tweet: https://x.com/user/status/123"
+Agent uses tweetclaw -> calls /api/v1/x/articles/:tweetId, returns title, body, images
+```
+
+### Open a support ticket (free)
+
+```
+You: "Open a support ticket about my monitor not working"
+Agent uses tweetclaw -> creates ticket with subject and description
+```
+
 ## API Categories
 
 | Category | Examples | Free |
@@ -210,14 +245,18 @@ Agent uses tweetclaw -> returns curated trending topics from 7 sources
 | Extraction | Reply/follower/community extraction (20 tools) | No |
 | Draws | Giveaway draws, export results | No |
 | Monitoring | Create monitors, view events, webhooks | No |
+| Automations | Create flows, add steps, test runs, inbound webhooks | Yes |
 | Account | API keys, subscription, connected X accounts | Yes |
 | Trends | X trending topics, curated radar from 7 sources | Mixed |
+| Support | Create tickets, reply, track status | Yes |
 
 ## Pricing
 
-Free tier (no subscription): tweet composition, style analysis, drafts, curated radar, account management, integrations.
+MPP pay-per-use (no account): 7 read-only X-API endpoints via Tempo (USDC) - tweet lookup ($0.0003), tweet search ($0.0003/tweet), user lookup ($0.00036), follower check ($0.002), article ($0.002), media download ($0.0003/media), trends ($0.0009).
 
-Subscription ($20/month): write actions, search, media, extractions, draws, monitors, X trending.
+Free tier (API key, no subscription): tweet composition, style analysis, drafts, curated radar, account management, integrations, automations (create/test), support tickets.
+
+Subscription ($20/month): write actions, search, article lookup, media, extractions, draws, monitors, X trending, flow activation (2 free, 10 subscriber).
 
 When a paid endpoint returns 402, TweetClaw provides a checkout URL.
 

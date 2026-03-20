@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import register from '../src/index.js';
+import * as mpp from '../src/mpp.js';
 import type { ToolResult } from '../src/types.js';
 
 interface RegisteredTool {
@@ -64,12 +65,12 @@ afterEach(() => {
 });
 
 describe('register', () => {
-  it('warns and returns when no API key configured', () => {
+  it('warns and returns when no API key or Tempo key configured', () => {
     expect.assertions(3);
     const { api, tools, warnings } = createMockApi();
     register(api);
     expect(warnings).toHaveLength(1);
-    expect(warnings[0]).toContain('No API key');
+    expect(warnings[0]).toContain('No API key or Tempo wallet');
     expect(tools).toHaveLength(0);
   });
 
@@ -120,12 +121,12 @@ describe('register', () => {
     expect(services).toHaveLength(1);
   });
 
-  it('warns when apiKey is missing from config object', () => {
+  it('warns when apiKey and tempoPrivateKey are both missing from config object', () => {
     expect.assertions(2);
     const { api, warnings } = createMockApi({});
     register(api);
     expect(warnings).toHaveLength(1);
-    expect(warnings[0]).toContain('No API key');
+    expect(warnings[0]).toContain('No API key or Tempo wallet');
   });
 
   it('poller service can start and stop', () => {
@@ -178,6 +179,73 @@ describe('register', () => {
     const xtrends = commands.find((command) => command.name === 'xtrends');
     const result = await xtrends?.handler({ args: 'tech' });
     expect(result?.text).toContain('AI Agents');
+  });
+
+  it('registers tools in MPP mode with tempoPrivateKey and no apiKey', () => {
+    expect.assertions(4);
+    vi.spyOn(mpp, 'initMpp').mockRejectedValue(new Error('skip'));
+    const { api, tools, infos, services } = createMockApi({ tempoPrivateKey: '0xabc123' });
+    register(api);
+    vi.restoreAllMocks();
+    expect(tools).toHaveLength(2);
+    expect(tools[0]?.name).toBe('explore');
+    expect(infos.some((m) => m.includes('MPP mode'))).toBe(true);
+    expect(services).toHaveLength(0);
+  });
+
+  it('registers only xtrends command in MPP mode (no xstatus)', () => {
+    expect.assertions(2);
+    vi.spyOn(mpp, 'initMpp').mockRejectedValue(new Error('skip'));
+    const { api, commands } = createMockApi({ tempoPrivateKey: '0xabc123' });
+    register(api);
+    vi.restoreAllMocks();
+    expect(commands).toHaveLength(1);
+    expect(commands[0]?.name).toBe('xtrends');
+  });
+
+  it('logs MPP init failure', async () => {
+    expect.assertions(1);
+    vi.spyOn(mpp, 'initMpp').mockRejectedValue(new Error('MPP requires mppx'));
+    const errors: string[] = [];
+    const { api } = createMockApi({ tempoPrivateKey: '0xabc123' });
+    const apiWithErrors = {
+      ...api,
+      logger: { ...api.logger, error: (m: string) => { errors.push(m); } },
+    };
+    register(apiWithErrors);
+    await vi.advanceTimersByTimeAsync(100);
+    vi.restoreAllMocks();
+    expect(errors.some((m) => m.includes('MPP init failed'))).toBe(true);
+  });
+
+  it('logs MPP success when initMpp succeeds', async () => {
+    expect.assertions(1);
+    vi.spyOn(mpp, 'initMpp').mockResolvedValue();
+    const infos: string[] = [];
+    const { api } = createMockApi({ tempoPrivateKey: '0xabc123' });
+    const apiWithInfos = {
+      ...api,
+      logger: { ...api.logger, info: (m: string) => { infos.push(m); } },
+    };
+    register(apiWithInfos);
+    await vi.advanceTimersByTimeAsync(100);
+    vi.restoreAllMocks();
+    expect(infos.some((m) => m.includes('MPP initialized'))).toBe(true);
+  });
+
+  it('logs non-Error MPP init failures', async () => {
+    expect.assertions(1);
+    vi.spyOn(mpp, 'initMpp').mockRejectedValue('string error');
+    const errors: string[] = [];
+    const { api } = createMockApi({ tempoPrivateKey: '0xabc123' });
+    const apiWithErrors = {
+      ...api,
+      logger: { ...api.logger, error: (m: string) => { errors.push(m); } },
+    };
+    register(apiWithErrors);
+    await vi.advanceTimersByTimeAsync(100);
+    vi.restoreAllMocks();
+    expect(errors.some((m) => m.includes('string error'))).toBe(true);
   });
 
   it('event poller logs events with known types', async () => {

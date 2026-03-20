@@ -16,7 +16,7 @@ function buildAuthHeader(credential: string): Record<string, string> {
 }
 
 function buildFetchHeaders(credential: string, hasBody: boolean): Record<string, string> {
-  const auth = buildAuthHeader(credential);
+  const auth = credential === '' ? {} : buildAuthHeader(credential);
   if (hasBody) {
     return { ...auth, [CONTENT_TYPE_HEADER]: 'application/json' };
   }

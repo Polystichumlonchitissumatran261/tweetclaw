@@ -1,5 +1,6 @@
 import { handleXStatus } from './commands/xstatus.js';
 import { handleXTrends } from './commands/xtrends.js';
+import { initMpp } from './mpp.js';
 import { createProxiedRequest } from './request.js';
 import { createEventPoller } from './services/event-poller.js';
 import { handleExplore, SEARCH_DESCRIPTION } from './tools/explore.js';
@@ -16,7 +17,8 @@ function isPollerEvent(value: unknown): value is PollerEvent {
 }
 
 function isPluginConfig(value: unknown): value is PluginConfig {
-  return typeof value === 'object' && value !== null && 'apiKey' in value;
+  if (typeof value !== 'object' || value === null) return false;
+  return 'apiKey' in value || 'tempoPrivateKey' in value;
 }
 
 const DEFAULT_POLLING_INTERVAL_SECONDS = 60;
@@ -74,13 +76,28 @@ export default function register(api: OpenClawApi, fetchFunction?: FetchFunction
   const config: unknown = api.pluginConfig;
   if (!isPluginConfig(config)) {
     api.logger.warn(
-      "TweetClaw: No API key configured. Run: openclaw config set plugins.entries.tweetclaw.config.apiKey 'xq_YOUR_KEY'",
+      "TweetClaw: No API key or Tempo wallet configured. Run: openclaw config set plugins.entries.tweetclaw.config.apiKey 'xq_YOUR_KEY' or set tempoPrivateKey for MPP pay-per-use",
     );
     return;
   }
 
-  const { apiKey, baseUrl = 'https://xquik.com' } = config;
-  const request = createProxiedRequest(baseUrl, apiKey, fetchFunction);
+  const { apiKey, baseUrl = 'https://xquik.com', tempoPrivateKey } = config;
+  const isMppMode = apiKey === undefined && tempoPrivateKey !== undefined;
+  const credential = apiKey ?? '';
+
+  if (isMppMode) {
+    void (async (): Promise<void> => {
+      try {
+        await initMpp(tempoPrivateKey);
+        api.logger.info('TweetClaw: MPP initialized - Tempo wallet ready');
+      } catch (error: unknown) {
+        api.logger.error(`TweetClaw: MPP init failed - ${error instanceof Error ? error.message : String(error)}`);
+      }
+    })();
+    api.logger.info('TweetClaw: MPP mode - pay-per-use via Tempo (7 X-API endpoints, no subscription needed)');
+  }
+
+  const request = createProxiedRequest(baseUrl, credential, fetchFunction);
 
   // --- Tools (2-tool approach, execute inside tool object) ---
   api.registerTool(
@@ -96,7 +113,7 @@ export default function register(api: OpenClawApi, fetchFunction?: FetchFunction
   api.registerTool(
     {
       description: EXECUTE_DESCRIPTION,
-      execute: async (_toolCallId, { code }) => handleTweetclaw({ apiKey, baseUrl, code, fetchFunction }),
+      execute: async (_toolCallId, { code }) => handleTweetclaw({ apiKey: credential, baseUrl, code, fetchFunction }),
       name: 'tweetclaw',
       parameters: CODE_PARAMETER,
     },
@@ -104,14 +121,16 @@ export default function register(api: OpenClawApi, fetchFunction?: FetchFunction
   );
 
   // --- Commands (instant, no LLM) ---
-  api.registerCommand({
-    description: 'Show Xquik account status & usage',
-    handler: async () => {
-      const text = await handleXStatus(request);
-      return { text };
-    },
-    name: 'xstatus',
-  });
+  if (!isMppMode) {
+    api.registerCommand({
+      description: 'Show Xquik account status & usage',
+      handler: async () => {
+        const text = await handleXStatus(request);
+        return { text };
+      },
+      name: 'xstatus',
+    });
+  }
 
   api.registerCommand({
     acceptsArgs: true,
@@ -123,9 +142,9 @@ export default function register(api: OpenClawApi, fetchFunction?: FetchFunction
     name: 'xtrends',
   });
 
-  // --- Background event poller ---
+  // --- Background event poller (requires API key, not available in MPP mode) ---
   const { pollingEnabled, pollingInterval } = config;
-  if (pollingEnabled !== false) {
+  if (!isMppMode && pollingEnabled !== false) {
     const poller = createEventPoller({
       intervalSeconds: pollingInterval ?? DEFAULT_POLLING_INTERVAL_SECONDS,
       onEvents: (events) => {

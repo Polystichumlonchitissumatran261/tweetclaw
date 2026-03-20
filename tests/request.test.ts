@@ -28,6 +28,18 @@ describe('buildFetchHeaders', () => {
     const headers = buildFetchHeaders('xq_key', false);
     expect(headers).toStrictEqual({ 'x-api-key': 'xq_key' });
   });
+
+  it('omits auth headers for empty credential (MPP mode)', () => {
+    expect.assertions(1);
+    const headers = buildFetchHeaders('', false);
+    expect(headers).toStrictEqual({});
+  });
+
+  it('includes content-type but no auth for empty credential with body', () => {
+    expect.assertions(1);
+    const headers = buildFetchHeaders('', true);
+    expect(headers).toStrictEqual({ 'content-type': 'application/json' });
+  });
 });
 
 describe('buildFetchUrl', () => {

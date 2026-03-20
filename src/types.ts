@@ -10,6 +10,7 @@ interface EndpointInfo {
   readonly category: string;
   readonly free: boolean;
   readonly method: string;
+  readonly mpp?: { readonly intent: string; readonly price: string };
   readonly parameters?: readonly EndpointParameter[];
   readonly path: string;
   readonly responseShape?: string;
@@ -32,10 +33,11 @@ interface ToolResult {
 }
 
 interface PluginConfig {
-  readonly apiKey: string;
+  readonly apiKey?: string;
   readonly baseUrl?: string;
   readonly pollingEnabled?: boolean;
   readonly pollingInterval?: number;
+  readonly tempoPrivateKey?: string;
 }
 
 interface EventPollerOptions {

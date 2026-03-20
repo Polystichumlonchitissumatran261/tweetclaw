@@ -12,14 +12,26 @@ openclaw plugins install @xquik/tweetclaw
 
 ## Configure
 
-1. Get an API key at [xquik.com/account-manager](https://xquik.com/account-manager)
-2. Set it in OpenClaw:
+### Option A: API key (full access, 97 endpoints)
 
 ```bash
 openclaw config set plugins.entries.tweetclaw.config.apiKey 'xq_YOUR_KEY'
 ```
 
-Optional settings:
+Get a key at [xquik.com/account-manager](https://xquik.com/account-manager).
+
+### Option B: MPP pay-per-use (no account needed, 7 read-only endpoints)
+
+```bash
+npm i mppx viem
+openclaw config set plugins.entries.tweetclaw.config.tempoPrivateKey '0xYOUR_TEMPO_KEY'
+```
+
+MPP (Machine Payments Protocol) lets agents pay per API call via Tempo (USDC). No account, no API key, no subscription. Get a Tempo wallet at [tempo.xyz](https://tempo.xyz).
+
+MPP-eligible endpoints: tweet lookup ($0.0003), tweet search ($0.0003/tweet), user lookup ($0.00036), follower check ($0.002), article lookup ($0.002), media download ($0.0003/media), trends ($0.0009).
+
+### Optional settings
 
 ```bash
 openclaw config set plugins.entries.tweetclaw.config.pollingEnabled true
@@ -85,36 +97,45 @@ You: "Monitor @elonmusk for new tweets and follower changes"
 
 ## API Coverage
 
-40+ endpoints across these categories:
+97 endpoints across these categories:
 
 | Category | Examples |
 |----------|---------|
 | **Write Actions** | Post tweets, reply, like, retweet, follow, unfollow, DM, update profile & avatar |
 | **Media** | Upload media via URL, download tweet media, get gallery links |
-| **Twitter** | Search tweets, look up users, check follow relationships |
+| **Twitter** | Search tweets, look up users, check follow relationships, get articles |
 | **Composition** | Compose, refine, score tweets; manage drafts; analyze writing styles |
 | **Extraction** | Run extraction jobs (reply-extractor, community-explorer, etc.) |
 | **Draws** | Run giveaway draws on tweets, export results |
 | **Monitoring** | Create monitors, view events, manage webhooks |
+| **Automations** | Create flows, add steps, test runs, inbound webhooks |
 | **Account** | Manage API keys, subscription, connected X accounts |
 | **Trends** | X trending topics, curated radar from multiple sources |
+| **Support** | Create tickets, reply, track status |
 
 ## Pricing
 
-**Free tier** (no subscription needed):
+**MPP pay-per-use** (no account needed):
+- 7 read-only X-API endpoints via Tempo (USDC)
+- Tweet/user/article lookup, search, follower check, media download, trends
+
+**Free tier** (API key, no subscription needed):
 - Tweet composition, style analysis, drafts
 - Curated trending radar
 - Account management, API keys
 - Integrations management
+- Flow automations (create, test, inbound webhooks)
+- Support tickets
 
 **Subscription ($20/month)** for full access:
 - Write actions (post, reply, like, retweet, follow, DM, update profile)
-- Tweet search, user lookup, media download
+- Tweet search, user lookup, article lookup, media download
 - Extractions, giveaway draws
 - Account monitors, events, webhooks
 - X trending topics
+- Flow activation (free: 2 flows, subscriber: 10)
 
-When a paid endpoint returns 402, TweetClaw automatically provides a checkout URL.
+When a paid endpoint returns 402, TweetClaw provides a checkout URL (API key mode) or auto-pays via Tempo (MPP mode).
 
 ## License
 

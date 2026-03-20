@@ -18,7 +18,7 @@ openclaw plugins install @xquik/tweetclaw
 openclaw config set plugins.entries.tweetclaw.config.apiKey 'xq_YOUR_KEY'
 ```
 
-Get a key at [xquik.com/account-manager](https://xquik.com/account-manager).
+Get a key at [dashboard.xquik.com/en/account?tab=x-accounts](https://dashboard.xquik.com/en/account?tab=x-accounts).
 
 ### Option B: MPP pay-per-use (no account needed, 7 read-only endpoints)
 

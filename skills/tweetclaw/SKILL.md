@@ -54,7 +54,7 @@ Do NOT use TweetClaw for browsing X in a browser, analytics dashboards, scheduli
 openclaw config set plugins.entries.tweetclaw.config.apiKey 'xq_YOUR_KEY'
 ```
 
-Get a key at [xquik.com/account-manager](https://xquik.com/account-manager).
+Get a key at [dashboard.xquik.com/en/account?tab=x-accounts](https://dashboard.xquik.com/en/account?tab=x-accounts).
 
 ### MPP mode (no account, pay-per-use via Tempo/USDC)
 

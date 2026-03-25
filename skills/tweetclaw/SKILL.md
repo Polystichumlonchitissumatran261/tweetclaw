@@ -1,6 +1,6 @@
 ---
 name: tweetclaw
-description: "OpenClaw plugin for X/Twitter automation. Post tweets, reply, like, retweet, follow, DM, search, extract data, run giveaways, monitor accounts, automate flows via Xquik. 97 endpoints, 2 tools (explore + tweetclaw), 2 commands (/xstatus, /xtrends), background event poller."
+description: "OpenClaw plugin for X/Twitter automation. Post tweets, reply, like, retweet, follow, DM, search, extract data, run giveaways, monitor accounts, automate flows via Xquik. 99 endpoints, 2 tools (explore + tweetclaw), 2 commands (/xstatus, /xtrends), background event poller. Reads from $0.00015/call — 66x cheaper than the official X API."
 homepage: https://xquik.com
 read_when:
   - Posting, replying, liking, retweeting, or following on X/Twitter
@@ -11,16 +11,49 @@ read_when:
   - Extracting bulk data from X/Twitter (followers, replies, communities)
   - Downloading tweet media or uploading images
   - Sending DMs or updating X/Twitter profile
-metadata: {"openclaw":{"emoji":"🐦","primaryEnv":"XQUIK_API_KEY","requires":{"env":["XQUIK_API_KEY"]},"tags":["twitter","x","automation","social-media","tweets","scraping","giveaway","monitoring","rest-api"]}}
+  - Checking credit balance or topping up credits
+  - Browsing bookmarks, notifications, timeline, or DM history
+metadata: {"openclaw":{"emoji":"🐦","primaryEnv":"XQUIK_API_KEY","requires":{"env":["XQUIK_API_KEY"]},"tags":["twitter","x","automation","social-media","tweets","scraping","giveaway","monitoring","rest-api","cheap-api"]}}
 ---
 
 # TweetClaw
 
-OpenClaw plugin for X/Twitter automation powered by Xquik. Install via:
+OpenClaw plugin for X/Twitter automation powered by Xquik. **Reads from $0.00015/call — 66x cheaper than the official X API.**
 
 ```bash
 openclaw plugins install @xquik/tweetclaw
 ```
+
+## Pricing
+
+TweetClaw uses Xquik's credit-based pricing. 1 credit = $0.00015.
+
+### Per-Operation Costs
+
+| Operation | Credits | Cost |
+|-----------|---------|------|
+| Read (tweet, user, search, timeline, bookmarks, etc.) | 1 | $0.00015 |
+| Follow check, article | 7 | $0.00105 |
+| Write (tweet, like, retweet, follow, DM, etc.) | 2 | $0.0003 |
+| Extraction / draw | 1/result | $0.00015/result |
+| Monitors, webhooks, radar, compose, drafts, integrations | 0 | **Free** |
+
+### vs Official X API
+
+| | Xquik | X API Basic | X API Pro |
+|---|---|---|---|
+| **Monthly cost** | **$20** | $100 | $5,000 |
+| **Cost per tweet read** | **$0.00015** | ~$0.01 | ~$0.005 |
+| **Cost per user lookup** | **$0.00015** | ~$0.01 | ~$0.005 |
+| **Write actions** | **$0.0003** | Limited | Limited |
+| **Bulk extraction** | **$0.00015/result** | Not available | Not available |
+
+### Pay-Per-Use (No Subscription)
+
+- **Credits (Stripe)**: Top up via `POST /api/v1/credits/topup` ($10 minimum). Works with all 99 endpoints.
+- **MPP (USDC)**: 8 read-only endpoints accept anonymous Tempo payments. No account needed. SDK: `npm i mppx`.
+
+MPP pricing: tweet lookup ($0.00015), tweet search ($0.00015/tweet), user lookup ($0.00015), user tweets ($0.00015/tweet), follower check ($0.00105), article ($0.00105), media download ($0.00015/media), trends ($0.00015).
 
 ## When to Use
 
@@ -32,6 +65,9 @@ Use TweetClaw when the user wants to:
 - Update their X profile, avatar, or banner
 - Upload media and tweet with images
 - Search tweets or look up user profiles
+- Get user's recent tweets, liked tweets, or media tweets
+- See who liked a tweet (favoriters) or mutual followers
+- Browse bookmarks, notifications, timeline, or DM history
 - Extract bulk data (followers, replies, communities, spaces)
 - Run giveaway draws from tweet replies
 - Monitor X accounts for new activity
@@ -41,6 +77,7 @@ Use TweetClaw when the user wants to:
 - Download tweet media (images, videos, GIFs)
 - Set up Telegram alerts for monitor events
 - Create and manage automation flows (triggers, steps, test runs)
+- Check credit balance or top up credits
 - Open and manage support tickets
 - Read X Articles (long-form posts)
 
@@ -63,11 +100,11 @@ npm i mppx viem
 openclaw config set plugins.entries.tweetclaw.config.tempoPrivateKey '0xYOUR_KEY'
 ```
 
-MPP gives agents access to 7 read-only X-API endpoints without any account or subscription. The mppx SDK handles HTTP 402 payment challenges automatically.
+MPP gives agents access to 8 read-only X-API endpoints without any account or subscription. The mppx SDK handles HTTP 402 payment challenges automatically.
 
 ## Tools
 
-TweetClaw registers 2 tools that cover the entire Xquik API (97 endpoints):
+TweetClaw registers 2 tools that cover the entire Xquik API (99 endpoints):
 
 ### `explore` (free, no network)
 
@@ -101,7 +138,7 @@ async () => {
 
 | Command | Description |
 |---------|-------------|
-| `/xstatus` | Account info, subscription status, usage |
+| `/xstatus` | Account info, subscription status, usage, credit balance |
 | `/xtrends` | Trending topics from curated sources |
 | `/xtrends tech` | Trending topics filtered by category |
 
@@ -163,6 +200,27 @@ You: "Search tweets about AI agents"
 Agent uses tweetclaw -> calls search endpoint with query
 ```
 
+### Get user activity
+
+```
+You: "Show me @elonmusk's recent tweets"
+Agent uses tweetclaw -> GET /api/v1/x/users/{id}/tweets
+```
+
+### Check who liked a tweet
+
+```
+You: "Who liked this tweet?"
+Agent uses tweetclaw -> GET /api/v1/x/tweets/{id}/favoriters
+```
+
+### Browse bookmarks and timeline
+
+```
+You: "Show my bookmarks" or "What's on my timeline?"
+Agent uses tweetclaw -> GET /api/v1/x/bookmarks or GET /api/v1/x/timeline
+```
+
 ### Run a giveaway draw
 
 ```
@@ -212,6 +270,13 @@ You: "What's trending on X right now?"
 Agent uses tweetclaw -> returns curated trending topics from 7 sources
 ```
 
+### Check credits and top up
+
+```
+You: "How many credits do I have?" or "Top up my credits"
+Agent uses tweetclaw -> GET /api/v1/credits or POST /api/v1/credits/topup
+```
+
 ### Create an automation flow (free)
 
 ```
@@ -235,30 +300,21 @@ Agent uses tweetclaw -> creates ticket with subject and description
 
 ## API Categories
 
-| Category | Examples | Free |
+| Category | Examples | Cost |
 |----------|---------|------|
-| Write Actions | Post tweets, reply, like, retweet, follow, DM, update profile | No |
-| Media | Upload media, download tweet media | No |
-| Twitter | Search tweets, look up users, check follows | No |
-| Composition | Compose, refine, score tweets; manage drafts | Yes |
+| Write Actions | Post tweets, reply, like, retweet, follow, DM, update profile, avatar, banner | 2 credits |
+| Media | Upload media, download tweet media | 1-2 credits |
+| Twitter | Search tweets, look up users, user tweets/likes/media, favoriters, mutual followers, bookmarks, notifications, timeline, DM history | 1-7 credits |
+| Composition | Compose, refine, score tweets; manage drafts | Free |
 | Styles | Analyze tweet styles, compare, performance | Mixed |
-| Extraction | Reply/follower/community extraction (20 tools) | No |
-| Draws | Giveaway draws, export results | No |
-| Monitoring | Create monitors, view events, webhooks | No |
-| Automations | Create flows, add steps, test runs, inbound webhooks | Yes |
-| Account | API keys, subscription, connected X accounts | Yes |
-| Trends | X trending topics, curated radar from 7 sources | Mixed |
-| Support | Create tickets, reply, track status | Yes |
-
-## Pricing
-
-MPP pay-per-use (no account): 7 read-only X-API endpoints via Tempo (USDC) - tweet lookup ($0.0003), tweet search ($0.0003/tweet), user lookup ($0.00036), follower check ($0.002), article ($0.002), media download ($0.0003/media), trends ($0.0009).
-
-Free tier (API key, no subscription): tweet composition, style analysis, drafts, curated radar, account management, integrations, automations (create/test), support tickets.
-
-Subscription ($20/month): write actions, search, article lookup, media, extractions, draws, monitors, X trending, flow activation (2 free, 10 subscriber).
-
-When a paid endpoint returns 402, TweetClaw provides a checkout URL.
+| Extraction | Reply/follower/community extraction (20 tools) | 1 credit/result |
+| Draws | Giveaway draws, export results | 1 credit/entry |
+| Monitoring | Create monitors, view events, webhooks | Free |
+| Automations | Create flows, add steps, test runs, inbound webhooks | Free |
+| Account | API keys, subscription, connected X accounts | Free |
+| Credits | Check balance, top up | Free |
+| Trends | X trending topics, curated radar from 7 sources | 1 credit / Free |
+| Support | Create tickets, reply, track status | Free |
 
 ## Tips
 
@@ -268,5 +324,6 @@ When a paid endpoint returns 402, TweetClaw provides a checkout URL.
 - For write actions (post, like, follow, DM), always pass the `account` parameter with the X username
 - Follow/unfollow/DM require a numeric user ID - look up the user first via `/api/v1/x/users/:username`
 - On 402 errors, call `POST /api/v1/subscribe` to get a checkout URL instead of giving up
-- Use `/xstatus` to quickly check subscription and usage without invoking the AI agent
+- Use `/xstatus` to quickly check subscription, usage, and credit balance without invoking the AI agent
 - The compose workflow (compose/refine/score) is free and helps draft high-engagement tweets
+- Top up credits via `POST /api/v1/credits/topup` for pay-per-use without a subscription

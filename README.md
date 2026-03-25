@@ -2,7 +2,7 @@
 
 Post tweets, reply, like, retweet, follow, DM & more - directly from your chat. Full X/Twitter automation for [OpenClaw](https://github.com/openclaw/openclaw).
 
-Powered by [Xquik](https://xquik.com), the all-in-one X automation platform. **Reads from $0.00015/call — 66x cheaper than the official X API.**
+Powered by [Xquik](https://xquik.com), the all-in-one X automation platform. **Reads from $0.00015/call - 66x cheaper than the official X API.**
 
 ## Pricing
 
@@ -39,7 +39,7 @@ Two options:
 
 ### Free Operations
 
-Tweet composition, style analysis, drafts, curated radar (7 sources), account management, integrations, automations, support tickets — all free, no credits consumed.
+Tweet composition, style analysis, drafts, curated radar (7 sources), account management, integrations, automations, support tickets - all free, no credits consumed.
 
 ## Install
 

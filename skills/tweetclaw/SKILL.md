@@ -1,6 +1,6 @@
 ---
 name: tweetclaw
-description: "OpenClaw plugin for X/Twitter automation. Post tweets, reply, like, retweet, follow, DM, search, extract data, run giveaways, monitor accounts, automate flows via Xquik. 99 endpoints, 2 tools (explore + tweetclaw), 2 commands (/xstatus, /xtrends), background event poller. Reads from $0.00015/call — 66x cheaper than the official X API."
+description: "OpenClaw plugin for X/Twitter automation. Post tweets, reply, like, retweet, follow, DM, search, extract data, run giveaways, monitor accounts, automate flows via Xquik. 99 endpoints, 2 tools (explore + tweetclaw), 2 commands (/xstatus, /xtrends), background event poller. Reads from $0.00015/call - 66x cheaper than the official X API."
 homepage: https://xquik.com
 read_when:
   - Posting, replying, liking, retweeting, or following on X/Twitter
@@ -18,7 +18,7 @@ metadata: {"openclaw":{"emoji":"🐦","primaryEnv":"XQUIK_API_KEY","requires":{"
 
 # TweetClaw
 
-OpenClaw plugin for X/Twitter automation powered by Xquik. **Reads from $0.00015/call — 66x cheaper than the official X API.**
+OpenClaw plugin for X/Twitter automation powered by Xquik. **Reads from $0.00015/call - 66x cheaper than the official X API.**
 
 ```bash
 openclaw plugins install @xquik/tweetclaw

